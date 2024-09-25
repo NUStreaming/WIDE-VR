@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>NGINX QUIC Preview - Served from Mac</title>
+		<link href="/static/css/style.css" rel="stylesheet" />
+		<link rel="icon" href="/static/img/favicon.png">
+		<meta charset="UTF-8" />
+		<meta name="description" content="This is a demo site for NGINX and HTTP/3. It is a way to test if your browser provides QUIC+HTTP/3 end-to-end." />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+	<body>
+		<header>
+			<div class="container">
+				<a class="logo" href="/">
+					<img src="/static/img/NGINX-horiz-white-type.svg" />
+				</a>
+				<div class="menu">
+					<a class="menu__item menu__item_active">Home</a>
+					<a href="/quic.html" class="menu__item">QUIC Test</a>
+				</div>
+			</img>
+		</header>
+
+		<div class="banner">
+			<div class="container">
+				<div class="quic-support">
+					<div class="quic-support__logo quic-support__logo_checking">
+						<div class="quic-support__logo__svg quic-support__logo__svg_unsupported"></div>
+					</div>
+					<div class="quic-support__text quic-support__text_checking">Checking if your client supports QUIC...</div>
+					<div class="quic-support__text quic-support__text_success hidden">Congratulations! You're connected over QUIC.</div>
+					<div class="quic-support__text quic-support__text_fail hidden">You're not using QUIC right now, but don't despair,<br/>check the <a href="https://nginx.org/en/docs/http/ngx_http_v3_module.html">documentation</a> to find a way.</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="content">
+			<div class="container">
+				<h2>Welcome to the demo site for QUIC+HTTP/3 support in nginx</h2>
+				<p>The code previously developed in a separate "quic" branch was <a href="https://hg.nginx.org/nginx/rev/235d482ef6bc" target="_blank">merged</a> to the nginx mainline and it is a part of nginx since 1.25.0 release.</p>
+    				<p>The QUIC and HTTP/3 support is experimental, caveat emptor applies.</p>
+    			<h3>Learn more at:</h3>
+    			<ul>
+    				<li><a href="https://nginx.org/en/docs/quic.html" target="_blank">Support for QUIC and HTTP/3</a> article</li>
+    				<li><a href="https://nginx.org/en/docs/http/ngx_http_v3_module.html" target="_blank">ngx_http_v3 module documentation</a></li>
+				<li>Current <a href="https://interop.seemann.io/" target="_blank">results</a> of QUIC interop test <a href="https://github.com/marten-seemann/quic-interop-runner" target="_blank">runner</a></li>
+    			</ul>
+			</div>
+		</div>
+
+		<script src="/static/js/index.js"></script>
+	</body>
+</html>

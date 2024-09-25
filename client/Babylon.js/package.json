@@ -1,0 +1,36 @@
+{
+  "name": "vv_webxr",
+  "version": "1.0.0",
+  "description": "WebXR (babylon.js) version of the VV streaming project",
+  "main": "index.ts",
+  "author": "Luc Billaud <luc.billaud@insa-lyon.fr>",
+  "license": "ISC",
+  "dependencies": {
+    "@babylonjs/core": "6.34.3",
+    "@babylonjs/inspector": "6.34.3",
+    "@babylonjs/materials": "6.34.3",
+    "@yomo/webtransport-polyfill": "^1.0.18",
+    "babylonjs": "6.34.3",
+    "dns-packet": "^5.2.2",
+    "polygon-clipping": "^0.15.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.30.0",
+    "@typescript-eslint/parser": "^2.30.0",
+    "clean-webpack-plugin": "^3.0.0",
+    "eslint": "^6.8.0",
+    "html-webpack-plugin": "^4.2.0",
+    "source-map-loader": "^4.0.1",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.2.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1",
+    "webpack-merge": "^5.10.0"
+  },
+  "scripts": {
+    "start": "npx webpack-dev-server --config webpack.config-dev.js",
+    "build": "npx webpack --config webpack.config-prod.js",
+    "lint": "npx eslint . --ext .ts,.tsx"
+  }
+}

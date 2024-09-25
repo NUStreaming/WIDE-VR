@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>DMeshScene WebXR</title>
+
+        <script class="code">
+            window.testResults = {
+                overall: {},
+                byDownload: {}
+                // byDownload: {bandwidthKBps: [], bandwidthKBps: [], bufferS: [], stallDurationS: []}
+            };
+        </script>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+
+            .overlayDiv {
+                position: fixed;
+                display: none;
+                width: 34%;
+                height: 50%;
+                margin: 12% 33%;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                color: white;
+                font-size: 42px;
+                z-index: 2;
+                cursor: pointer;
+            }
+
+            .overlayTxt{
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                text-align: center;
+                transform: translate(-50%,-50%);
+                -ms-transform: translate(-50%,-50%);
+            }
+
+            .overlayStats {
+                position: fixed;
+                display: block;
+                width: 100%;
+                height: 100%;
+                margin-top: 88vh;
+                margin-left: 1vh;
+                line-height: 40%;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                color: yellow;
+                font-size: 12px;
+                z-index: 1;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="renderCanvas" touch-action="none"></canvas>
+
+        <div id="overlayPlayBtn" class="overlayDiv">
+            <div class="overlayTxt">
+                <p>&#9658; Play</p>
+                <p style="font-size:18px">Strategy: <span id="overlayStrategy">-</span></p>
+                <p style="font-size:18px">Metric: <span id="overlayMetric">-</span></p>
+                <p style="font-size:18px">Camera Route: <span id="overlayRoute">-</span></p>
+            </div>
+        </div>
+        <div id="overlayLoadingDiv" class="overlayDiv">
+            <div id="overlayLoadingTxt" class="overlayTxt">Buffering..</div>
+        </div>
+        <div class="overlayStats">
+            <p>Segment ID: <span id="segmentIdTxt"></span></p>
+            <p>Download time (ms per frame): <span id="downloadDebugTxt"></span></p>
+            <p>Decode time (ms per frame): <span id="decodeDebugTxt"></span></p>
+            <p>Download speed (Mbps): <span id="downloadSpeedTxt"></span></p>
+        </div>
+    </body>
+</html>

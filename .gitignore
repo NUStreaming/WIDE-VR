@@ -1,0 +1,15 @@
+.DS_Store
+**/.DS_Store
+
+client/Babylon.js/node_modules
+
+server/nginx/static/media/vsenseVVDB2/*
+server/nginx/static/media/vsenseVVDB2_1200f/*
+server/nginx/static/media/vsenseVVDB2_6000f/*
+server/nginx/config/certs/*
+server/nginx/logs/*
+
+test/puppeteer/node_modules
+test/puppeteer/results
+!test/puppeteer/results/plot_results_chart_1.py
+!test/puppeteer/results/process_results_to_csv.py
