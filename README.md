@@ -1,4 +1,4 @@
-# AdaptiveStreamingForVV
+# VV Streaming for the Web (vvs-for-web)
 
 ## Download datasets
 
