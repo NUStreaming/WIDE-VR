@@ -2,18 +2,15 @@
 
 ## Download datasets
 
-- `assets/vsenseVVDB2`
+- `server/nginx/static/media/vsenseVVDB2`
     - Download link: https://drive.google.com/file/d/1COQNALBO8irgtM2WoeH_evDi32_di0Kf/view?usp=sharing
     - Add dataset to: `Babylon.js/master/assets/vsenseVVDB2/Matis_obj_Draco-Jpeg`
-
-- `assets/museum` and `assets/objects`
-    - See original repository: https://github.com/Plateforme-VR-ENISE/AdaptiveStreaming
 
 
 ## To build
 
 ```bash
-cd Babylon.js/master
+cd client/Babylon.js
 npm install
 ```
 
@@ -21,17 +18,22 @@ npm install
 
 ```bash
 # For Babylon.js player
-cd Babylon.js/masterVMesh
+cd client/Babylon.js
 npm run start
 
-# For WebTransport server
-cd webtransport-go/src
-go run main.go
+# For nginx server
+# .. do something ..
+# cd webtransport-go/src
+# go run main.go
 
 # For dev Chrome browser
-cd scripts
-bash start-localhost-test-chrome-linux.sh
+# .. do something ..
+# cd scripts
+# bash start-localhost-test-chrome-linux.sh
 # Navigate to: https://localhost:8080/ -> Click on "Advanced" and "Proceed to site"
+
+# For puppeteer tests
+# .. do something ..
 
 ```
 
