@@ -137,6 +137,7 @@ export default class Metrics {
      */
     private static visible(object: DMeshObject, camera: FreeCamera): number {
         const currentMesh = object.getCurrentMesh();             // The currently displayed mesh
+        if (!currentMesh)   return 0;                            // If the mesh is not present, it is not visible
         const box = currentMesh.getBoundingInfo().boundingBox;    // Its bounding box
 
         // Projecting the corners of the bounding box on the screen
@@ -164,6 +165,7 @@ export default class Metrics {
      */
     private static potential(object: DMeshObject, camera: FreeCamera): number {
         const currentMesh = object.getCurrentMesh();             // The currently displayed mesh
+        if (!currentMesh)   return 0;                            // If the mesh is not present, it is not visible
         const box = currentMesh.getBoundingInfo().boundingBox;    // Its bounding box
         const cameraCopy = camera.clone("dummy0") as FreeCamera;
 

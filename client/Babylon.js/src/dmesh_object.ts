@@ -1,6 +1,7 @@
-import { Scene, Tools, Vector3, RawTexture } from "@babylonjs/core";
+import { Scene, Tools, Vector3, RawTexture, Camera, Frustum, Quaternion } from "@babylonjs/core";
 import { PBRMaterial, Texture } from "@babylonjs/core/Materials";
 import { DracoCompression, TransformNode, Mesh, Geometry, VertexData } from "@babylonjs/core/Meshes";
+import { WebXRCamera } from "@babylonjs/core/XR/webXRCamera";
 
 import Utils from "./game_utils";
 import SpeedManager from "./speed_manager";
@@ -49,6 +50,8 @@ export default class DMeshObject {
     public container: TransformNode | undefined;    // Node containing the meshes
 
     public currentLevel: number;                    // LOD currently displayed
+    public currentMesh: Mesh | undefined;           // Mesh currently displayed
+
     private levels: Array<Mesh> | undefined;        // Array of the LODs
     private asked: Array<boolean> | undefined;      // Array of booleans corresponding to if the LoD have been requested
 
@@ -232,19 +235,26 @@ export default class DMeshObject {
         }
     }
 
+    // /**
+    //  * Get the mesh currently displayed
+    //  */
+    // public getCurrentMesh = (): Mesh => {
+    //     if (!this.levels || !this.metadata) {
+    //         throw "Error : DMeshObject not initialized";
+    //     }
+    //     else if (this.currentLevel == -1) {
+    //         throw "Error : No level yet imported";
+    //     }
+    //     else {
+    //         return this.levels[this.currentLevel];
+    //     }
+    // }
+
     /**
      * Get the mesh currently displayed
      */
-    public getCurrentMesh = (): Mesh => {
-        if (!this.levels || !this.metadata) {
-            throw "Error : DMeshObject not initialized";
-        }
-        else if (this.currentLevel == -1) {
-            throw "Error : No level yet imported";
-        }
-        else {
-            return this.levels[this.currentLevel];
-        }
+    public getCurrentMesh = (): Mesh | undefined => {
+        return this.currentMesh;
     }
 
     /**
@@ -466,4 +476,43 @@ export default class DMeshObject {
     public getBufferAt(frameNo: number){
         return this.buffer[frameNo];
     }
+
+    /**
+     * Returns all objects seen by the camera
+     * @param cam The point of view
+     */
+    public isObjectVisible = (cam: Camera): boolean => {
+        // // from https://playground.babylonjs.com/#4AZJV8#6 and
+        // //  https://forum.babylonjs.com/t/check-isinfrustum-but-with-a-percentage-of-the-camera-view/16906/5
+        
+        // Apparently the XR Camera Frustum is rotated by 180°
+        //  Thus, we rotate it to make sure that the frustum is correcty oriented
+        //  This behaviour is similar to what I observed when using Unity
+        if (cam instanceof WebXRCamera) {
+            cam.rotationQuaternion.multiplyInPlace(Quaternion.FromEulerAngles(0, Math.PI, 0));
+        }
+        
+        const proj = cam.getProjectionMatrix(true);
+        const view = cam.getViewMatrix(true);
+        const transform = view.multiply(proj);
+
+        // This allows us to check if a mesh is in the frustum even with cloned cameras.
+        const frustumPlanes = Frustum.GetPlanes(transform);
+
+        // Rotating the XR Camera back to its original rotation
+        if (cam instanceof WebXRCamera) {
+            cam.rotationQuaternion.multiplyInPlace(Quaternion.FromEulerAngles(0, -Math.PI, 0));
+        }
+
+        const currentMesh = this.getCurrentMesh();
+
+        // console.log("~~~~~~~~~ checking visibility ~~~~~~~~~")
+        // console.log(currentMesh?.isInFrustum(frustumPlanes))
+        // console.log(frustumPlanes)
+
+        if (currentMesh && currentMesh.isInFrustum(frustumPlanes))
+            return true;
+        else 
+            return false;
+    } 
 }

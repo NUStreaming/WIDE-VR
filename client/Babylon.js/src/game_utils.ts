@@ -13,13 +13,27 @@ export default class Utils {
      * Key run params to be set here
      * *********************************************/
     public includeTexture: boolean = true;
+
     public captureScreenshot: boolean = false;
+    // public captureScreenshotInterval: number = 24; // in frames
+    public captureScreenshotInterval: number = 1; // in frames
+    // public captureScreenshotInterval: number = 2; // in frames
 
     // public serverIp: string = "192.168.1.16"
     // public serverIp: string = "localhost"
 
     // public serverIp: string = "127.0.0.1"
-    public serverIp: string = "192.168.68.69" // Ubuntu nginx
+    public serverIp: string = "192.168.68.70" // Ubuntu nginx
+
+
+    public targetPlaybackFps = 24; // in frames per second
+
+    public minBufferForStartupInSec = 2; // in seconds
+    // public minBufferForStartupInSec = 0.5;
+    // public minBufferForStartupInSec = 5;
+    
+    public chosenBolaV: number = 200;
+    public chosenBolaGamma: number = 0.9;
 
 
     public constructor() {

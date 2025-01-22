@@ -1,4 +1,4 @@
-# VV Streaming for the Web (vvs-for-web)
+# WIDE-VR 
 
 ## Download datasets
 

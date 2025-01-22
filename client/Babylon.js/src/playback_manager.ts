@@ -1,5 +1,5 @@
 import ObjectManager from "./object_manager";
-import RouteManager from "./route_manager";
+// import RouteManager from "./route_manager";
 import CameraManager from "./camera_manager";
 import Utils from "./game_utils";
 import StatsLogger from "./stats_logger";
@@ -10,7 +10,7 @@ import { Observable, Observer, RawTexture } from "babylonjs";
 
 export default class PlaybackManager {
     private objectManager: ObjectManager;
-    private routeManager: RouteManager;
+    // private routeManager: RouteManager;
     private cameraManager: CameraManager;
     private utils: Utils;
     private scene: Scene;
@@ -25,12 +25,13 @@ export default class PlaybackManager {
     private startStallTime: number = 0;
 
     public hasPlaybackStarted: boolean = false;
+    public hasPlaybackStartedAfterStartupDelay: boolean = false;
     public startPlaybackTime: number|null = null;
     public endPlaybackTime: number|null = null;
 
-
+    // MOVED TO `game_utils.ts`
     // public targetPlaybackFps: number = 30;
-    public targetPlaybackFps: number = 24;  // Default
+    // public targetPlaybackFps: number = 24;  // Default
     // public targetPlaybackFps: number = 18;
     // public targetPlaybackFps: number = 14;
     // public targetPlaybackFps: number = 12;
@@ -53,22 +54,36 @@ export default class PlaybackManager {
     // private minBufferForStartup: number = 5;
     // private minBufferForResume: number = 0.5; // Min. buffer (in seconds) before playback resumes after stalling
 
-    // For 1200f/50s video
-    private minBufferForStartup = 5; // Min. buffer (in seconds) before playback begins
-    private minBufferForResume = 3; // Min. buffer (in seconds) before playback resumes after stalling
+    // // For 1200f/50s video
+    // private minBufferForStartup = 5; // Min. buffer (in seconds) before playback begins
+    // private minBufferForResume = 3; // Min. buffer (in seconds) before playback resumes after stalling
 
     // For 6000f/250s video
     // private minBufferForStartup = 30; // Min. buffer (in seconds) before playback begins
     // private minBufferForResume = 30; // Min. buffer (in seconds) before playback resumes after stalling
 
 
-    constructor(utils: Utils, objectManager: ObjectManager, routeManager: RouteManager, cameraManager: CameraManager) {
+    // MOVED TO `game_utils.ts`
+    // private minBufferForStartup: number = 2;
+    // private minBufferForStartup: number = 0.5;
+    // private minBufferForStartup: number = 5;
+
+    // private minBufferForResume: number = 0.5; // Min. buffer (in seconds) before playback resumes after stalling
+    // private minBufferForResume: number = this.minBufferForStartup; // Min. buffer (in seconds) before playback resumes after stalling
+ 
+    private minBufferForStartup: number;
+    private minBufferForResume: number;
+
+    constructor(utils: Utils, objectManager: ObjectManager, cameraManager: CameraManager) {
         this.objectManager = objectManager;
-        this.routeManager = routeManager;
+        // this.routeManager = routeManager;
         this.cameraManager = cameraManager;
         this.scene = utils.scene;
         this.engine = utils.engine;
         this.utils = utils;
+
+        this.minBufferForStartup = this.utils.minBufferForStartupInSec;
+        this.minBufferForResume = this.utils.minBufferForStartupInSec;
     }
 
     // public checkIsPlaying = (): boolean => {
@@ -129,19 +144,14 @@ export default class PlaybackManager {
             ) as HTMLDivElement | null;
         if (playBtn) playBtn.style.display = "none";
 
-        // Start camera on chosen route 
-        // (Note: If `Manual` is chosen, the camera will not move automatically - handled by RouteManager)
-        this.routeManager.moveCameraOnChosenRoute();
-
-
-
+        // this.objectManager.initialSceneMeshesLen = this.utils.scene.meshes.length;
 
         this.playbackLoopObservable = this.scene.onBeforeRenderObservable.add(() => {
             // Check if interval time has passed
             // (ref: https://forum.babylonjs.com/t/how-can-i-set-a-custom-fps/10462/3)
             const currTime = performance.now();
             const deltaTime = currTime - this.prevFrameUpdateTime;
-            const nextFrameInterval = 1000/this.targetPlaybackFps;
+            const nextFrameInterval = 1000/this.utils.targetPlaybackFps;
             // console.log(`currTime: ${currTime}`)
             // console.log(`this.prevFrameUpdateTime: ${this.prevFrameUpdateTime}`)
             // console.log(`deltaTime: ${deltaTime}`)
@@ -179,7 +189,7 @@ export default class PlaybackManager {
                     if (!segment) {
                         console.log(`No segment found for frame ${this.nextFrameNoForPlayback}.. Stalling player and stopping playback loop..`);
                         this.stallPlayer();
-                        
+
                         // clearInterval(playbackLoopHandler);
                         // this.isPlaybackLoopRunning = false;
                         
@@ -232,22 +242,39 @@ export default class PlaybackManager {
     
                     // Hide previously loaded mesh
                     for (var i = this.meshes.length - 1; i >= 0; i--) {
+                    // for (var i = this.meshes.length - 1 - (this.objectManager.getAllObjects().length); i >= 0; i--) {
                         if (this.meshes[i].position == obj.getPosition()) {
+                            obj.currentMesh = this.meshes[i];   // Save t-1 mesh for evaluation of visibility (using the next mesh will not work as it has not been rendered yet)
                             this.meshes[i].dispose(true, true);
                             break;  // The loop will break after the intended obj's mesh is disposed
                         }
                     }
 
                     this.meshes.push(mesh);
+
+                    // Update stats
+                    StatsLogger.logStatsBySegmentOnPlayback(obj, segment);
                 }
 
 
-                // if (this.captureScreenshot && this.cameraManager.getCamera()) {
-                if (this.utils.captureScreenshot && this.cameraManager.getCamera() && Number(this.nextFrameNoForPlayback) < 100) {
-                    Tools.CreateScreenshot(this.engine, this.cameraManager.getCamera(), { precision: 1 });
-                    // Tools.CreateScreenshot(this.engine, this.cameraManager.getCamera(), { width: 600, height: 400 });
+                // In order to make predictions, 
+                //  we have te save the position and rotation after updating
+                this.cameraManager.saveCameraPosition();
+
+
+                // Capture screenshots for post-processing e.g. of perceptual quality
+                if (this.utils.captureScreenshot && this.cameraManager.getCamera() && (Number(this.nextFrameNoForPlayback) % this.utils.captureScreenshotInterval == 0)) {
+                // if (this.utils.captureScreenshot && this.cameraManager.getCamera() && Number(this.nextFrameNoForPlayback) < 100) {
+                    Tools.CreateScreenshot(this.engine, this.cameraManager.getCamera(), { precision: 1 }, (data) => {
+                        console.log('Screenshot captured..');
+                        StatsLogger.logScreenshotCaptured(`Frame_${(this.nextFrameNoForPlayback-1).toString().padStart(5, '0')}`, data);
+                    });
                 }
     
+                if (this.nextFrameNoForPlayback == 2) {  // We do not check at frame_1 because there is a delay between processing it and rendering it
+                    this.hasPlaybackStartedAfterStartupDelay = true;
+                }
+
                 this.nextFrameNoForPlayback++;
     
                 // End playback 
@@ -310,6 +337,7 @@ export default class PlaybackManager {
 
     public isBufferSufficientForPlayback = (): boolean => {
         const minBufferLengthInFrameCount = this.getMinBufferLengthAcrossObjectsInFrameCount();
+        console.log(`minBufferLengthInFrameCount: ${minBufferLengthInFrameCount}`);
         // return (minBufferLengthInFrameCount >= (this.minBufferForStartup * this.playbackManager.targetPlaybackFps)) 
         //         && (minBufferLengthInFrameCount >= (this.playbackManager.nextFrameNoForPlayback + this.minBufferForResume * this.playbackManager.targetPlaybackFps));
 
@@ -318,10 +346,10 @@ export default class PlaybackManager {
             return true;
 
         // Less than required startup buffer
-        if (minBufferLengthInFrameCount < (this.minBufferForStartup * this.targetPlaybackFps))
+        if (minBufferLengthInFrameCount < (this.minBufferForStartup * this.utils.targetPlaybackFps))
             return false;
         // More than or equal to required startup buffer but less than required resume buffer
-        else if (minBufferLengthInFrameCount < (this.nextFrameNoForPlayback + (this.minBufferForResume * this.targetPlaybackFps)))
+        else if (minBufferLengthInFrameCount < (this.nextFrameNoForPlayback + (this.minBufferForResume * this.utils.targetPlaybackFps)))
             return false;
         else
             return true;
@@ -339,7 +367,19 @@ export default class PlaybackManager {
 
     public getCurrentBufferInSeconds = (): number => {
         let currentBufferInFrames = this.getMinBufferLengthAcrossObjectsInFrameCount() - this.nextFrameNoForPlayback;
-        return currentBufferInFrames / this.targetPlaybackFps;
+        return currentBufferInFrames / this.utils.targetPlaybackFps;
+    }
+
+    public getMinBufferForStartup = (): number => {
+        return this.minBufferForStartup;
+    }
+
+    public getMinBufferForResume = (): number => {
+        return this.minBufferForResume;
+    }
+
+    public getCurrentPlaybackTime = (): number => {
+        return (this.nextFrameNoForPlayback-1) / this.utils.targetPlaybackFps;
     }
 
 
@@ -444,7 +484,13 @@ export default class PlaybackManager {
     private unstallPlayer = () => {
         this.isStalling = false;
         const stallDuration = performance.now() - this.startStallTime;  // in ms
-        StatsLogger.cumulativeStall += stallDuration;
+
+        if (StatsLogger.startupDelay == 0) {
+            StatsLogger.startupDelay += stallDuration;
+        } else {
+            StatsLogger.cumulativeStall += stallDuration;
+            StatsLogger.numStalls++;
+        }
         console.log(`End stall... stallDuration: ${stallDuration}`);
 
         // Hide stalling
@@ -453,5 +499,13 @@ export default class PlaybackManager {
           ) as HTMLDivElement | null;
         if (loadingDiv) loadingDiv.style.display = "none";
         // this.engine.hideLoadingUI();
+    }
+
+    public isPlayerStalling = (): boolean => {
+        return this.isStalling;
+    }
+
+    public isPlaybackEnded = (): boolean => {
+        return this.endPlaybackTime != null;
     }
 }

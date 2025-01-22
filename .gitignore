@@ -2,14 +2,20 @@
 **/.DS_Store
 
 client/Babylon.js/node_modules
+client/Babylon.js/docs
+client/Babylon.js/README_original.md
 
-server/nginx/static/media/vsenseVVDB2/*
-server/nginx/static/media/vsenseVVDB2_1200f/*
-server/nginx/static/media/vsenseVVDB2_6000f/*
+# server/nginx/static/media/vsenseVVDB2/*
+# server/nginx/static/media/vsenseVVDB2_600f/*
+server/nginx/static/media/*
 server/nginx/config/certs/*
 server/nginx/logs/*
 
 test/puppeteer/node_modules
-test/puppeteer/results
-!test/puppeteer/results/plot_results_chart_1.py
-!test/puppeteer/results/process_results_to_csv.py
+test/puppeteer/results/*
+# !test/puppeteer/results/plot_results_chart_1.py
+# !test/puppeteer/results/process_results_to_csv.py
+test/puppeteer/network-patterns
+!test/puppeteer/network-patterns/5g-lumous.js
+
+README_original.md

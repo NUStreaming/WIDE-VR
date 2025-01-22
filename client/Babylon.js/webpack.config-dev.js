@@ -22,7 +22,7 @@ module.exports = merge(common, {
         // enable to access from other devices on the network
         // host: 'localhost',
         // host: '127.0.0.1',
-        host: '192.168.68.69', // Mac local network IP
+        host: '192.168.68.70', // Mac local network IP
 
         // if you aren’t using ngrok, and want to connect locally, webxr requires https
         https: true,

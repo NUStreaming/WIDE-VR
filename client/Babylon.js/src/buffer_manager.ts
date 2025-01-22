@@ -53,8 +53,8 @@ export default class BufferManager {
         //     this.playbackManager.play();
         // }
 
-        if (!this.playbackManager.hasPlaybackStarted && this.playbackManager.isBufferSufficientForPlayback()) {
-            this.playbackManager.beginPlayback();
-        }
+        // if (!this.playbackManager.hasPlaybackStarted && this.playbackManager.isBufferSufficientForPlayback()) {
+        //     this.playbackManager.beginPlayback();
+        // }
     }
 }

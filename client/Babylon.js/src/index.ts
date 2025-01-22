@@ -23,7 +23,7 @@ import "@babylonjs/loaders"
 import "@babylonjs/inspector";
 
 import ObjectManager from './object_manager';
-import CameraManager from './camera_manager';
+import CameraManager, {VpStrategyChoice} from './camera_manager';
 import StrategyManager, {ChooseStrategy} from "./strategy_manager";
 import AbrManager, {AbrSegmentInput, StrategyChoice} from "./abr_manager";
 import Metrics, {ChooseMetric} from "./metrics";
@@ -95,14 +95,26 @@ class DMeshScene
      * *********************************************/
     
     // private initStrategy = StrategyChoice.FromFileInput;
+    // private initStrategy = StrategyChoice.HighestQuality;
+    // private initStrategy = StrategyChoice.CustomQuality;
+
+    // private initStrategy = StrategyChoice.Uniform_2;        // VDH paper
     private initStrategy = StrategyChoice.Greedy_2;     // VDH paper
-    // private initStrategy = StrategyChoice.Uniform_2;    // VDH paper
     // private initStrategy = StrategyChoice.Bola_1;
 
     private initMetric = ChooseMetric.Distance;
     
     private initRoute = RouteChoice.Manual;
     // private initRoute = RouteChoice.BackForth;
+    // private initRoute = RouteChoice.LeftRight;
+    // private initRoute = RouteChoice.LeftOnly;
+    // private initRoute = RouteChoice.LeftOnlyNonLinear;
+    // private initRoute = RouteChoice.LeftRightLeft;
+
+    private initVpStrategy = VpStrategyChoice.None;
+    // private initVpStrategy = VpStrategyChoice.LinearPredictor;
+    // private initVpStrategy = VpStrategyChoice.LinearRegression;
+    // private initVpStrategy = VpStrategyChoice.WeightedLinearRegression;
 
 
     /**
@@ -940,7 +952,7 @@ class DMeshScene
 
         // In order to make predictions, 
         //  we have te save the position and rotation after updating
-        this.cameraManager.saveCameraPosition();
+        // this.cameraManager.saveCameraPosition();  // MOVED to saving position at each frame render update, i.e. in playbackManager (more stable intervals)
     }
 
     /**
@@ -975,7 +987,14 @@ class DMeshScene
         // this.abrManager.executeStrategy();
         
         this.downloadManager.beginSegmentRetrieval();
+        this.playbackManager.beginPlayback();
+        this.routeManager.moveCameraOnChosenRoute();
         // this.playbackManager.beginPlayback(); // Moved to downloadManager > bufferManager
+
+        setInterval(logStats, 100);
+        function logStats() {
+            StatsLogger.logStatsByTimeInterval();
+        }
 
         // To be checked..
         this.stratButton?.onPointerUpObservable.clear();
@@ -1085,9 +1104,12 @@ class DMeshScene
         const strategyTxt = document.getElementById("overlayStrategy") as HTMLDivElement | null;
         const metricTxt = document.getElementById("overlayMetric") as HTMLDivElement | null;
         const routeTxt = document.getElementById("overlayRoute") as HTMLDivElement | null;
-        if (strategyTxt) strategyTxt.innerHTML = this.abrManager.getStrategyAsString(this.initStrategy);
+        const vpStrategyTxt = document.getElementById("overlayVpStrategy") as HTMLDivElement | null;
+
+        if (strategyTxt) strategyTxt.innerHTML = this.abrManager.getStrategyAsString(this.initStrategy);  // For ABR
         if (metricTxt) metricTxt.innerHTML = Metrics.getMetricAsString(this.initMetric);
         if (routeTxt) routeTxt.innerHTML = this.routeManager.getRouteAsString(this.initRoute);
+        if (vpStrategyTxt) vpStrategyTxt.innerHTML = this.cameraManager.getVpStrategyAsString(this.initVpStrategy);  // For viewport prediction
 
         // Set up play button
         const playBtn = document.getElementById("overlayPlayBtn") as HTMLDivElement | null;
@@ -1102,6 +1124,7 @@ class DMeshScene
                 this.abrManager.setStrategy(this.initStrategy);
                 Metrics.setMetric(this.initMetric);
                 this.routeManager.setRoute(this.initRoute);
+                this.cameraManager.setVpStrategy(this.initVpStrategy);
 
                 // Begin playback
                 this.beginPlaybackWithAbr();
@@ -1184,10 +1207,12 @@ const initializeManagers = () => {
     const objectContainer = new TransformNode("OBJECTS", utils.scene);
     const objectManager = new ObjectManager(utils, null, objectContainer);
     const cameraManager = new CameraManager(utils);
-    const routeManager = new RouteManager(cameraManager, utils.scene);
-    const playbackManager = new PlaybackManager(utils, objectManager, routeManager, cameraManager);
+    // const routeManager = new RouteManager(cameraManager, utils.scene);
+    // const playbackManager = new PlaybackManager(utils, objectManager, routeManager, cameraManager);
+    const playbackManager = new PlaybackManager(utils, objectManager, cameraManager);
+    const routeManager = new RouteManager(cameraManager, playbackManager, utils.scene);
     const bufferManager = new BufferManager(objectManager, playbackManager);
-    const abrManager = new AbrManager(objectManager, cameraManager, playbackManager);
+    const abrManager = new AbrManager(utils, objectManager, cameraManager, playbackManager);
     const downloadManager = new DownloadManager(utils, bufferManager, objectManager, abrManager, cameraManager, playbackManager);
     const strategyManager = new StrategyManager(cameraManager, downloadManager, objectManager);
     const dmeshScene = new DMeshScene(utils, objectManager, strategyManager, abrManager, playbackManager, downloadManager, cameraManager, routeManager);
@@ -1197,6 +1222,7 @@ const initializeManagers = () => {
     StatsLogger.abrManager = abrManager;
     StatsLogger.playbackManager = playbackManager;
     StatsLogger.routeManager = routeManager;
+    StatsLogger.utils = utils;
 
     return dmeshScene;
 }

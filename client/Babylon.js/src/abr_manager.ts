@@ -6,6 +6,9 @@ import DMeshObject from "./dmesh_object";
 import Metrics from "./metrics";
 import SpeedManager from './speed_manager';
 import PlaybackManager from "./playback_manager";
+import Utils from "./game_utils";
+import StatsLogger from "./stats_logger";
+import { StringDictionary } from "babylonjs";
 
 
 export interface AbrSegmentInput{ 
@@ -20,13 +23,16 @@ export enum StrategyChoice {
     Greedy_2,
     Uniform_2,
     Bola_1,
-    FromFileInput
+    FromFileInput,
+    HighestQuality,
+    CustomQuality
 }
 
 export default class AbrManager {
     private objectManager: ObjectManager;
     private cameraManager: CameraManager;
     private playbackManager: PlaybackManager;
+    private utils: Utils;
 
     private _chosenStrategy: StrategyChoice = StrategyChoice.Random_1; // The strategy we will execute
 
@@ -37,12 +43,14 @@ export default class AbrManager {
     private abrFileInput: AbrSegmentInput[] = [];
 
 
-    public constructor(objectManager: ObjectManager, cameraManager: CameraManager, playbackManager: PlaybackManager) {
+    public constructor(utils: Utils, objectManager: ObjectManager, cameraManager: CameraManager, playbackManager: PlaybackManager) {
         this.objectManager = objectManager;
         this.cameraManager = cameraManager;
         this.playbackManager = playbackManager;
+        this.utils = utils;
+
         // this.BUFFER = 1/this.playbackManager.targetPlaybackFps * 2.5; // Download buffer size in seconds
-        this.SEG_DUR = 1/this.playbackManager.targetPlaybackFps;
+        this.SEG_DUR = 1/this.utils.targetPlaybackFps;
     }
 
     public setStrategy(strategy: StrategyChoice) {
@@ -70,6 +78,10 @@ export default class AbrManager {
                 return "Bola1";
             case StrategyChoice.FromFileInput:
                 return "FromFileInput";
+            case StrategyChoice.HighestQuality:
+                return "HighestQuality";
+            case StrategyChoice.CustomQuality:
+                return "CustomQuality";
         }
     }
 
@@ -100,13 +112,17 @@ export default class AbrManager {
             case StrategyChoice.Random_1:
                 return this.random1();
             case StrategyChoice.Greedy_2:
-                return this.greedy2();
+                return this.greedy2(segmentNo);
             case StrategyChoice.Uniform_2:
-                return this.uniform2();
+                return this.uniform2(segmentNo);
             case StrategyChoice.Bola_1:
-                return this.bola1();
+                return this.bola1(segmentNo);
             case StrategyChoice.FromFileInput:
                 return this.fromfileinput(segmentNo);
+            case StrategyChoice.HighestQuality:
+                return this.highestQuality();
+            case StrategyChoice.CustomQuality:
+                return this.customQuality();
         }
     }
 
@@ -163,12 +179,8 @@ export default class AbrManager {
     }
 
 
-    /**
-     * Greedy strategy proposed in paper Towards 6DoF HTTP Adaptive Streaming Through Point Cloud Compression
-     * For this strategy, we try to allocate the highest level to the object before going to the next on
-     */
-    private greedy2(): Array<{ object: DMeshObject, utility: number, level: number }> {
-        console.log(`\n---------------------- ABR GREEDY2 ----------------------`)
+
+    private highestQuality(): Array<{ object: DMeshObject, utility: number, level: number }> {
 
         // ================ INIT ========================
         const cam: FreeCamera = this.cameraManager.getCamera();
@@ -176,11 +188,232 @@ export default class AbrManager {
         const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number }> = [];  // Stores objs with utility and next quality level as determined by the ABR
         // let newLevel = false;       // Will remain false if we don't select a level
 
+        
+        // ================== GETTING THE UTILITY AND SORTING =======================
+        for (const obj of objects) {
+            objectsToRetrieve.push({ object: obj, utility: -1, level: obj.getMetadata().Levels.length - 1 });
+        };
+        
+        return objectsToRetrieve;
+    }
+
+
+
+    private customQuality(): Array<{ object: DMeshObject, utility: number, level: number }> {
+
+        // ================ INIT ========================
+        const cam: FreeCamera = this.cameraManager.getCamera();
+        const objects: DMeshObject[] = this.objectManager.getAllObjects();
+        const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number }> = [];  // Stores objs with utility and next quality level as determined by the ABR
+        // let newLevel = false;       // Will remain false if we don't select a level
 
         // ================== GETTING THE UTILITY AND SORTING =======================
         for (const obj of objects) {
-            // objectLevels.push({ object: obj, utility: Metrics.calcUtility(obj, cam), nextLevel: obj.currentLevel });
-            objectsToRetrieve.push({ object: obj, utility: Metrics.calcUtility(obj, cam), level: 0 }); // Start from lowest quality level 
+            let objectName = obj.getMetadata().name;
+            let customLevel = 0;
+            if (objectName.includes("Matis")) {
+                customLevel = 3;
+                // customLevel = 2;
+                // customLevel = 1;
+                // customLevel = 0;
+            } else if (objectName.includes("Rafa")) {
+                customLevel = 3;
+                // customLevel = 2;
+                // customLevel = 1;
+                // customLevel = 0;
+                
+            }
+            objectsToRetrieve.push({ object: obj, utility: -1, level: customLevel});
+        };
+        
+        return objectsToRetrieve;
+    }
+
+
+    // /**
+    //  * Greedy strategy proposed in paper Towards 6DoF HTTP Adaptive Streaming Through Point Cloud Compression
+    //  * For this strategy, we try to allocate the highest level to the object before going to the next on
+    //  */
+    // private greedy2(segmentNo: number): Array<{ object: DMeshObject, utility: number, level: number }> {
+    //     console.log(`\n---------------------- ABR GREEDY2 segment #${segmentNo} ----------------------`)
+
+    //     // // ================ INIT ========================
+    //     // const cam: FreeCamera = this.cameraManager.getCamera();
+    //     // const objects: DMeshObject[] = this.objectManager.getAllObjects();
+    //     // const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number }> = [];  // Stores objs with utility and next quality level as determined by the ABR
+    //     // // let newLevel = false;       // Will remain false if we don't select a level
+
+    //     // ================ INIT ========================
+    //     const cam: FreeCamera = this.cameraManager.getCamera();
+        
+    //     let objects: DMeshObject[] = [];
+
+    //     // Skip viewport prediction for first x frames due to stationary camera while building startup buffer
+    //     // Beyond x frames, also skip if playback (and hence rendering) has not began as we can't assess object visibility
+    //     // if (segmentNo <= (this.playbackManager.getMinBufferForStartup() * this.playbackManager.targetPlaybackFps) || !this.playbackManager.hasPlaybackStarted) { 
+        
+    //     // Skip viewport prediction and get all objects if playback has not started (if playback (and hence rendering) has not began, we can't assess object visibility)
+    //     if (!this.playbackManager.hasPlaybackStartedAfterStartupDelay) { 
+    //         objects = this.objectManager.getAllObjects();
+    //     } 
+    //     else {
+    //         const cameraLater: FreeCamera = this.cameraManager.getCameraInTime(this.playbackManager.getCurrentBufferInSeconds());  // Temporal horizon for prediction = curr buffer size (instead of fixed value)
+    //         const visiblesNow: DMeshObject[] = this.objectManager.getVisibleObjects(this.cameraManager.getCamera());
+    //         const visiblesLater: DMeshObject[] = this.objectManager.getVisibleObjects(cameraLater);
+    //         // console.log("######## visiblesNow")
+    //         // console.log(visiblesNow)
+    //         // console.log("######## visiblesLater")
+    //         // console.log(visiblesLater)
+    //         const visiblesNowNames = visiblesNow.map(o => o.getMetadata().name);
+    //         const visiblesLaterNames = visiblesLater.map(o => o.getMetadata().name);
+    //         StatsLogger.logStatsByVpPrediction(cameraLater, this.cameraManager.getPositionSamples(), this.cameraManager.getRotationSamples(), visiblesNowNames, visiblesLaterNames, segmentNo);
+    //         cameraLater.dispose();
+
+    //         // Objects combine list of visiblesNow and visiblesLater
+    //         objects = [...visiblesNow, ...visiblesLater.filter( o => !~visiblesNow.indexOf(o) )];  // !~indexOf returns true if element is not in array and false if it is in
+    //     }
+
+    //     if (objects.length == 0) return [];  // Nothing to retrieve if no visible objects...
+    //     // if (objects.length == 0) objects = this.objectManager.getAllObjects();  // Alternate behaviour: Assume there will always be at least one visible obj, and if this happens, a bug may have occurred with the platform's rendering (known issue - mesh may disappear (at times reappear) during stall), and hence we retrieve all objects
+
+    //     const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number }> = [];  // Stores objs with utility and next quality level as determined by the ABR
+
+
+    //     // ================== GETTING THE UTILITY AND SORTING =======================
+    //     for (const obj of objects) {
+    //         // objectLevels.push({ object: obj, utility: Metrics.calcUtility(obj, cam), nextLevel: obj.currentLevel });
+    //         objectsToRetrieve.push({ object: obj, utility: Metrics.calcUtility(obj, cam), level: 0 }); // Start from lowest quality level 
+    //     };
+
+    //     // Sorting our utilities array by descending utility (highest utility first)
+    //     objectsToRetrieve.sort((a, b) => - a.utility + b.utility);
+        
+
+    //     // ================= EXECUTING OUR STRATEGY =======================
+    //     const bw = SpeedManager.getBandwidth();  // KBps
+    //     const ds = SpeedManager.getDSpeed();  // KBps
+
+    //     // const budget = (bw * ds / (bw + ds)) * this.BUFFER;  // KB avail in the next BUFFER seconds
+    //     // const budget = (bw * ds / (bw + ds)) * this.SEG_DUR;  // KB avail in the next SEG_DUR seconds
+    //     const budget = bw * this.SEG_DUR;
+        
+    //     // Init usedBytes with the level 0 of each obj
+    //     let usedBytes = 0;
+    //     objectsToRetrieve.forEach((item) => usedBytes += item.object.getLevelSize(item.level)); // TODO: convert getLevelSize() to getSegmentSize(segmentNum, level)
+
+    //     // console.log(`bw (KBps): ${bw}, ds (KBps): ${ds}, SEG_DUR: ${this.SEG_DUR}`);
+    //     // console.log(`budget (KB): ${budget}`);
+
+    //     // Looping on all objects (ordered by highest utility first)
+    //     for (let i = 0; i < objectsToRetrieve.length; i++) {
+    //         // const objLevel = objectsToRetrieve[i];
+    //         const currentObject = objectsToRetrieve[i].object;
+    //         let currentLevel = objectsToRetrieve[i].level; // Initialized with level 0
+    //         // usedBytes += currentObject.getLevelSize(currentLevel);
+
+    //         // console.log(`[Loop] obj: ${currentObject.getFolderPath()}`)
+
+    //         // while (nextLevel + 1 < currentObject.getNumberOfLevels()) {
+    //             // Calculating the cost to download the mesh
+    //             //  if a mesh is already downloaded, its size is 0
+    //             // let cost = currentObject.getLevel(nextLevel + 1) ?
+    //             //             0 :
+    //             //             currentObject.getLevelSize(nextLevel + 1);
+    //             // cost -= currentObject.getLevel(nextLevel) ?
+    //             //         0 :
+    //             //         currentObject.getLevelSize(nextLevel);
+
+    //         // Looping on the levels until our budget is reached
+    //         // NB: Each trial is on (currentLevel + 1)
+    //         while (currentLevel + 1 < currentObject.getNumberOfLevels()) {
+    //             // Calculating the additional cost to download the mesh of the next level
+    //             let cost = currentObject.getLevelSize(currentLevel + 1) - currentObject.getLevelSize(currentLevel);   // TODO: Check if this is geo or texture (ensure it's both)
+                
+    //             // console.log(`>>>>>>  [Trying level ${currentLevel+1}] usedBytes + cost > budget ? (${usedBytes} + ${cost} > ${budget} ?)`)
+
+    //             // If it costs too much for our budget, we go on to the next object
+    //             //  otherwise, we set the level to download to this trialled level
+    //             if (usedBytes + cost > budget) { 
+    //                 // console.log('>>>>>>  cost too much!!')
+    //                 break; 
+    //             }
+    //             else {
+    //                 // console.log('>>>>>>  cost is ok')
+    //                 usedBytes += cost;
+    //                 currentLevel++;
+    //                 objectsToRetrieve[i].level = currentLevel;
+    //                 // newLevel = true; // Don't think we need this anymore
+    //             }
+    //         }
+    //     }
+
+    //     // For debugging
+    //     console.log(`[Results]`);
+    //     console.log(`>>>>>>  usedBytes: ${usedBytes}`);
+    //     for (let i = 0; i < objectsToRetrieve.length; i++) {
+    //         console.log(`[i=${i}]`);
+    //         console.log(`>>>>>>  objectsToRetrieve[i].object: ${objectsToRetrieve[i].object.getFolderPath()}`);
+    //         console.log(`>>>>>>  objectsToRetrieve[i].level: ${objectsToRetrieve[i].level}`);
+    //         console.log('>>>>>>');
+    //     }
+
+    //     return objectsToRetrieve;
+    // }
+
+
+
+    /**
+     * Greedy strategy proposed in paper Towards 6DoF HTTP Adaptive Streaming Through Point Cloud Compression
+     * For this strategy, we try to allocate the highest level to the object before going to the next on
+     */
+    private greedy2(segmentNo: number): Array<{ object: DMeshObject, utility: number, level: number }> {
+        console.log(`\n---------------------- ABR GREEDY2 segment #${segmentNo} ----------------------`)
+
+        // // ================ INIT ========================
+        // const cam: FreeCamera = this.cameraManager.getCamera();
+        // const objects: DMeshObject[] = this.objectManager.getAllObjects();
+        // const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number }> = [];  // Stores objs with utility and next quality level as determined by the ABR
+        // // let newLevel = false;       // Will remain false if we don't select a level
+
+        // ================ INIT ========================
+        const cam: FreeCamera = this.cameraManager.getCamera();
+        
+        // let objects: DMeshObject[] = [];
+        let visiblesLater: DMeshObject[] = [];
+        // let visiblesLaterNames: String[] = [];
+
+
+
+        // Skip viewport prediction for first x frames due to stationary camera while building startup buffer
+        // Beyond x frames, also skip if playback (and hence rendering) has not began as we can't assess object visibility
+        // if (segmentNo <= (this.playbackManager.getMinBufferForStartup() * this.playbackManager.targetPlaybackFps) || !this.playbackManager.hasPlaybackStarted) { 
+        
+        // Skip viewport prediction and get all objects if playback has not started (if playback (and hence rendering) has not began, we can't assess object visibility)
+        if (!this.playbackManager.hasPlaybackStartedAfterStartupDelay) {
+            visiblesLater = this.objectManager.getAllObjects();
+        } 
+        else {
+            const cameraLater: FreeCamera = this.cameraManager.getCameraInTime(this.playbackManager.getCurrentBufferInSeconds());  // Temporal horizon for prediction = curr buffer size (instead of fixed value)
+            visiblesLater = this.objectManager.getVisibleObjects(cameraLater);
+            StatsLogger.logStatsByVpPrediction(cameraLater, visiblesLater, this.cameraManager.getPositionSamples(), this.cameraManager.getRotationSamples(), segmentNo);
+            cameraLater.dispose();
+
+            // Objects combine list of visiblesNow and visiblesLater
+            // objects = [...visiblesNow, ...visiblesLater.filter( o => !~visiblesNow.indexOf(o) )];  // !~indexOf returns true if element is not in array and false if it is in
+        }
+        // visiblesLaterNames = visiblesLater.map(o => o.getMetadata().name);
+
+        const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number, isVisible: boolean }> = [];  // Stores objs with utility and next quality level as determined by the ABR
+
+        // ================== GETTING THE UTILITY AND SORTING =======================
+        for (const obj of this.objectManager.getAllObjects()) {
+            let isVisible: boolean;
+            if (~visiblesLater.indexOf(obj)) {
+                isVisible = true;
+            } 
+            else { isVisible = false; }
+
+            objectsToRetrieve.push({ object: obj, utility: Metrics.calcUtility(obj, cam), level: 0, isVisible: isVisible }); // Start from lowest quality level 
         };
 
         // Sorting our utilities array by descending utility (highest utility first)
@@ -199,18 +432,22 @@ export default class AbrManager {
         let usedBytes = 0;
         objectsToRetrieve.forEach((item) => usedBytes += item.object.getLevelSize(item.level)); // TODO: convert getLevelSize() to getSegmentSize(segmentNum, level)
 
-        // console.log(`>>>>>> bw: ${bw}, ds: ${ds}, BUFFER: ${this.BUFFER}`);
-        console.log(`bw (KBps): ${bw}, ds (KBps): ${ds}, SEG_DUR: ${this.SEG_DUR}`);
-        console.log(`budget (KB): ${budget}`);
+        // console.log(`bw (KBps): ${bw}, ds (KBps): ${ds}, SEG_DUR: ${this.SEG_DUR}`);
+        // console.log(`budget (KB): ${budget}`);
 
         // Looping on all objects (ordered by highest utility first)
         for (let i = 0; i < objectsToRetrieve.length; i++) {
+
+            if (!objectsToRetrieve[i].isVisible) {
+                continue;  // For non-visible objects, we make do with the lowest level
+            }
+
             // const objLevel = objectsToRetrieve[i];
             const currentObject = objectsToRetrieve[i].object;
             let currentLevel = objectsToRetrieve[i].level; // Initialized with level 0
             // usedBytes += currentObject.getLevelSize(currentLevel);
 
-            console.log(`[Loop] obj: ${currentObject.getFolderPath()}`)
+            // console.log(`[Loop] obj: ${currentObject.getFolderPath()}`)
 
             // while (nextLevel + 1 < currentObject.getNumberOfLevels()) {
                 // Calculating the cost to download the mesh
@@ -228,16 +465,16 @@ export default class AbrManager {
                 // Calculating the additional cost to download the mesh of the next level
                 let cost = currentObject.getLevelSize(currentLevel + 1) - currentObject.getLevelSize(currentLevel);   // TODO: Check if this is geo or texture (ensure it's both)
                 
-                console.log(`>>>>>>  [Trying level ${currentLevel+1}] usedBytes + cost > budget ? (${usedBytes} + ${cost} > ${budget} ?)`)
+                // console.log(`>>>>>>  [Trying level ${currentLevel+1}] usedBytes + cost > budget ? (${usedBytes} + ${cost} > ${budget} ?)`)
 
                 // If it costs too much for our budget, we go on to the next object
                 //  otherwise, we set the level to download to this trialled level
                 if (usedBytes + cost > budget) { 
-                    console.log('>>>>>>  cost too much!!')
+                    // console.log('>>>>>>  cost too much!!')
                     break; 
                 }
                 else {
-                    console.log('>>>>>>  cost is ok')
+                    // console.log('>>>>>>  cost is ok')
                     usedBytes += cost;
                     currentLevel++;
                     objectsToRetrieve[i].level = currentLevel;
@@ -262,22 +499,166 @@ export default class AbrManager {
 
 
 
+    // /**
+    //  * Uniform strategy proposed in paper Towards 6DoF HTTP Adaptive Streaming Through Point Cloud Compression
+    //  * For this strategy, we try to allocate the same LoD for all objects in decreasing utility before considering the next LoD
+    //  */
+    // private uniform2(segmentNo: number): Array<{ object: DMeshObject, utility: number, level: number }> {
+    //     console.log(`\n---------------------- ABR UNIFORM2 segment #${segmentNo} ----------------------`)
+
+    //     // ================ INIT ========================
+    //     const cam: FreeCamera = this.cameraManager.getCamera();
+        
+    //     let objects:DMeshObject[] = [];
+
+    //     // Skip viewport prediction and get all objects if playback has not started (if playback (and hence rendering) has not began, we can't assess object visibility)
+    //     if (!this.playbackManager.hasPlaybackStartedAfterStartupDelay) { 
+    //         objects = this.objectManager.getAllObjects();
+    //     } 
+    //     else {
+    //         const cameraLater: FreeCamera = this.cameraManager.getCameraInTime(this.playbackManager.getCurrentBufferInSeconds());  // Temporal horizon for prediction = curr buffer size (instead of fixed value)
+    //         const visiblesNow: DMeshObject[] = this.objectManager.getVisibleObjects(this.cameraManager.getCamera());
+    //         const visiblesLater: DMeshObject[] = this.objectManager.getVisibleObjects(cameraLater);
+    //         // console.log("######## visiblesNow")
+    //         // console.log(visiblesNow)
+    //         // console.log("######## visiblesLater")
+    //         // console.log(visiblesLater)
+    //         const visiblesNowNames = visiblesNow.map(o => o.getMetadata().name);
+    //         const visiblesLaterNames = visiblesLater.map(o => o.getMetadata().name);
+    //         // StatsLogger.logStatsByVpPrediction(cameraLater, this.cameraManager.getPositionSamples(), this.cameraManager.getRotationSamples(), visiblesNowNames, visiblesLaterNames, segmentNo);
+    //         cameraLater.dispose();
+
+    //         // Objects combine list of visiblesNow and visiblesLater
+    //         objects = [...visiblesNow, ...visiblesLater.filter( o => !~visiblesNow.indexOf(o) )];  // !~indexOf returns true if element is not in array and false if it is in
+    //     }
+
+    //     if (objects.length == 0) return [];  // Nothing to retrieve if no visible objects...
+    //     // if (objects.length == 0) objects = this.objectManager.getAllObjects();  // Alternate behaviour: Assume there will always be at least one visible obj, and if this happens, a bug may have occurred with the platform's rendering (known issue - mesh may disappear (at times reappear) during stall), and hence we retrieve all objects
+
+
+    //     const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number }> = [];  // Stores objs with utility and next quality level as determined by the ABR
+
+
+    //     // ================== GETTING THE UTILITY AND SORTING =======================
+    //     for (const obj of objects) {
+    //         objectsToRetrieve.push({ object: obj, utility: Metrics.calcUtility(obj, cam), level: 0 }); // Start from lowest quality level 
+    //     };
+
+    //     // Sorting our utilities array by descending utility (highest utility first)
+    //     objectsToRetrieve.sort((a, b) => - a.utility + b.utility);
+        
+
+    //     // ================= EXECUTING OUR STRATEGY =======================
+    //     const bw = SpeedManager.getBandwidth();  // KBps
+    //     const ds = SpeedManager.getDSpeed();  // KBps
+    //     const budget = bw * this.SEG_DUR;
+        
+    //     // Init usedBytes with the level 0 of each obj
+    //     let usedBytes = 0;
+    //     objectsToRetrieve.forEach((item) => usedBytes += item.object.getLevelSize(item.level)); // TODO: convert getLevelSize() to getSegmentSize(segmentNum, level)
+    //     let endLoDLoop = false;
+
+    //     console.log(`bw (KBps): ${bw}, ds (KBps): ${ds}, SEG_DUR: ${this.SEG_DUR}`);
+    //     console.log(`budget (KB): ${budget}`);
+
+    //     // Looping on all possible levels starting with the next possible level (=1)
+    //     // (`if` statement below will ensure we don't exceed individual obj's max level later)
+    //     for (let l = 1; l < this.objectManager.getMaxNumOfLevelsAcrossObjects(); l++) {
+    //         if (endLoDLoop) break;
+    //         console.log(`[Loop] level: ${l}`)
+
+    //         // Looping on all objects (ordered by highest utility first)
+    //         for (let i = 0; i < objectsToRetrieve.length; i++) {
+    //             const currentObject = objectsToRetrieve[i].object;
+    //             let currentLevel = objectsToRetrieve[i].level; // Initialized with level 0
+    //             // usedBytes += currentObject.getLevelSize(currentLevel);
+
+    //             console.log(`[Loop] obj: ${currentObject.getFolderPath()} >>>>>>`)
+
+    //             // Checking if the trialled level is present in obj and if it would exceed the budget
+    //             // NB: Each trial is on (currentLevel + 1)
+    //             if (currentLevel + 1 < currentObject.getNumberOfLevels()) {
+                
+    //                 // Calculating the additional cost to download the mesh of the next level
+    //                 let cost = currentObject.getLevelSize(currentLevel + 1) - currentObject.getLevelSize(currentLevel);   // TODO: Check if this is geo or texture (ensure it's both)
+                    
+    //                 console.log(`>>>>>> [Trying level ${currentLevel+1}] usedBytes + cost > budget ? (${usedBytes} + ${cost} > ${budget} ?)`)
+
+    //                 // If it costs too much for our budget, we go on to the next object
+    //                 //  otherwise, we set the level to download to this trialled level
+    //                 if (usedBytes + cost > budget) { 
+    //                     console.log('>>>>>>  cost too much!!');
+    //                     if ((i + 1) == objectsToRetrieve.length) endLoDLoop = true; // If last obj in this LoD iteration, end loop as no need to trial larger-sized LoD
+    //                     continue;
+    //                 }
+    //                 else {
+    //                     console.log('>>>>>>  cost is ok');
+    //                     usedBytes += cost;
+    //                     currentLevel++;
+    //                     objectsToRetrieve[i].level = currentLevel;
+    //                     // newLevel = true; // Don't think we need this anymore
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     // For debugging
+    //     console.log(`[Results]`);
+    //     console.log(`>>>>>>  usedBytes: ${usedBytes}`);
+    //     for (let i = 0; i < objectsToRetrieve.length; i++) {
+    //         console.log(`[i=${i}]`);
+    //         console.log(`>>>>>>  objectsToRetrieve[i].object: ${objectsToRetrieve[i].object.getFolderPath()}`);
+    //         console.log(`>>>>>>  objectsToRetrieve[i].level: ${objectsToRetrieve[i].level}`);
+    //         console.log('>>>>>>');
+    //     }
+
+    //     return objectsToRetrieve;
+    // }
+
+
+
     /**
      * Uniform strategy proposed in paper Towards 6DoF HTTP Adaptive Streaming Through Point Cloud Compression
      * For this strategy, we try to allocate the same LoD for all objects in decreasing utility before considering the next LoD
      */
-    private uniform2(): Array<{ object: DMeshObject, utility: number, level: number }> {
-        console.log(`\n---------------------- ABR UNIFORM2 ----------------------`)
+    private uniform2(segmentNo: number): Array<{ object: DMeshObject, utility: number, level: number }> {
+        console.log(`\n---------------------- ABR UNIFORM2 segment #${segmentNo} ----------------------`)
 
         // ================ INIT ========================
         const cam: FreeCamera = this.cameraManager.getCamera();
-        const objects: DMeshObject[] = this.objectManager.getAllObjects();
-        const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number }> = [];  // Stores objs with utility and next quality level as determined by the ABR
+        
+        let visiblesLater: DMeshObject[] = [];
+
+        // Skip viewport prediction and get all objects if playback has not started (if playback (and hence rendering) has not began, we can't assess object visibility)
+        if (!this.playbackManager.hasPlaybackStartedAfterStartupDelay) { 
+            visiblesLater = this.objectManager.getAllObjects();
+        } 
+        else {
+            const cameraLater: FreeCamera = this.cameraManager.getCameraInTime(this.playbackManager.getCurrentBufferInSeconds());  // Temporal horizon for prediction = curr buffer size (instead of fixed value)
+            visiblesLater = this.objectManager.getVisibleObjects(cameraLater);
+            StatsLogger.logStatsByVpPrediction(cameraLater, visiblesLater, this.cameraManager.getPositionSamples(), this.cameraManager.getRotationSamples(), segmentNo);
+            cameraLater.dispose();
+
+            // Objects combine list of visiblesNow and visiblesLater
+            // objects = [...visiblesNow, ...visiblesLater.filter( o => !~visiblesNow.indexOf(o) )];  // !~indexOf returns true if element is not in array and false if it is in
+        }
+
+        // if (objects.length == 0) return [];  // Nothing to retrieve if no visible objects...
+        // if (objects.length == 0) objects = this.objectManager.getAllObjects();  // Alternate behaviour: Assume there will always be at least one visible obj, and if this happens, a bug may have occurred with the platform's rendering (known issue - mesh may disappear (at times reappear) during stall), and hence we retrieve all objects
+
+
+        const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number, isVisible: boolean }> = [];  // Stores objs with utility and next quality level as determined by the ABR
 
 
         // ================== GETTING THE UTILITY AND SORTING =======================
-        for (const obj of objects) {
-            objectsToRetrieve.push({ object: obj, utility: Metrics.calcUtility(obj, cam), level: 0 }); // Start from lowest quality level 
+        for (const obj of this.objectManager.getAllObjects()) {
+            let isVisible: boolean;
+            if (~visiblesLater.indexOf(obj)) {
+                isVisible = true;
+            } 
+            else { isVisible = false; }
+
+            objectsToRetrieve.push({ object: obj, utility: Metrics.calcUtility(obj, cam), level: 0, isVisible: isVisible }); // Start from lowest quality level 
         };
 
         // Sorting our utilities array by descending utility (highest utility first)
@@ -294,8 +675,8 @@ export default class AbrManager {
         objectsToRetrieve.forEach((item) => usedBytes += item.object.getLevelSize(item.level)); // TODO: convert getLevelSize() to getSegmentSize(segmentNum, level)
         let endLoDLoop = false;
 
-        console.log(`bw (KBps): ${bw}, ds (KBps): ${ds}, SEG_DUR: ${this.SEG_DUR}`);
-        console.log(`budget (KB): ${budget}`);
+        // console.log(`bw (KBps): ${bw}, ds (KBps): ${ds}, SEG_DUR: ${this.SEG_DUR}`);
+        // console.log(`budget (KB): ${budget}`);
 
         // Looping on all possible levels starting with the next possible level (=1)
         // (`if` statement below will ensure we don't exceed individual obj's max level later)
@@ -305,6 +686,11 @@ export default class AbrManager {
 
             // Looping on all objects (ordered by highest utility first)
             for (let i = 0; i < objectsToRetrieve.length; i++) {
+
+                if (!objectsToRetrieve[i].isVisible) {
+                    continue;  // For non-visible objects, we make do with the lowest level
+                }
+                
                 const currentObject = objectsToRetrieve[i].object;
                 let currentLevel = objectsToRetrieve[i].level; // Initialized with level 0
                 // usedBytes += currentObject.getLevelSize(currentLevel);
@@ -358,47 +744,84 @@ export default class AbrManager {
      * Bola strategy
      * For this strategy, ...
      */
-    private bola1(): Array<{ object: DMeshObject, utility: number, level: number }> {
-        console.log(`\n---------------------- ABR BOLA1 ----------------------`)
+    private bola1(segmentNo: number): Array<{ object: DMeshObject, utility: number, level: number }> {
+        console.log(`\n---------------------- ABR BOLA1 segment #${segmentNo} ----------------------`)
 
         // ================ INIT ========================
         const cam: FreeCamera = this.cameraManager.getCamera();
-        const objects: DMeshObject[] = this.objectManager.getAllObjects();
-        const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number }> = [];  // Stores objs with utility and next quality level as determined by the ABR
+        
+        // let objects: DMeshObject[] = [];
+        let visiblesLater: DMeshObject[] = [];
+
+        // Skip viewport prediction and get all objects if playback has not started (if playback (and hence rendering) has not began, we can't assess object visibility)
+        if (!this.playbackManager.hasPlaybackStartedAfterStartupDelay) {
+            visiblesLater = this.objectManager.getAllObjects();
+        } 
+        else {
+            // const cameraLater: FreeCamera = this.cameraManager.getCameraInTime(this.playbackManager.getCurrentBufferInSeconds());  // Temporal horizon for prediction = curr buffer size (instead of fixed value)
+            const cameraLater: FreeCamera = this.cameraManager.getCameraInTime((segmentNo-this.playbackManager.nextFrameNoForPlayback-1)/this.utils.targetPlaybackFps);  // Temporal horizon for prediction
+            visiblesLater = this.objectManager.getVisibleObjects(cameraLater);
+            StatsLogger.logStatsByVpPrediction(cameraLater, visiblesLater, this.cameraManager.getPositionSamples(), this.cameraManager.getRotationSamples(), segmentNo);
+            cameraLater.dispose();
+
+            // Objects combine list of visiblesNow and visiblesLater
+            // objects = [...visiblesNow, ...visiblesLater.filter( o => !~visiblesNow.indexOf(o) )];  // !~indexOf returns true if element is not in array and false if it is in
+        }
+
+        // if (objects.length == 0) return [];  // Nothing to retrieve if no visible objects...
+        // if (objects.length == 0) objects = this.objectManager.getAllObjects();  // Alternate behaviour: Assume there will always be at least one visible obj, and if this happens, a bug may have occurred with the platform's rendering (known issue - mesh may disappear (at times reappear) during stall), and hence we retrieve all objects
+
+
+        const objectsToRetrieve: Array<{ object: DMeshObject, utility: number, level: number, isVisible: boolean }> = [];  // Stores objs with utility and next quality level as determined by the ABR
 
         
         // ================= EXECUTING OUR STRATEGY =======================
-        for (const obj of objects) {
+        for (const obj of this.objectManager.getAllObjects()) {
+
             let maxOptimizationVal = Number.NEGATIVE_INFINITY;
             let selectedLevel = 0;
 
-            for (let m = 0; m < this.objectManager.getMaxNumOfLevelsAcrossObjects(); m++) {
-                
-                let S_1 = obj.getLevelSize(0);
-                let S_m = obj.getLevelSize(m);
-                let v_m = Math.log(2 * S_m / S_1);
-                let p_kd = 1;   // TODO - viewport prediction
+            let isVisible: boolean;
+            if (~visiblesLater.indexOf(obj)) {
+                isVisible = true;
+            } 
+            else { isVisible = false; }
 
-                let delta = this.SEG_DUR;
-                // let V = 5.5;        // BOLA360 section 4.3
-                let V = 200;
-                let gamma = 0.9;    // BOLA360 section 4.3
+            if (isVisible) {
+                // Trial levels only if object is visible
+                // Otherwise, for non-visible objects, we make do with the lowest level
+                for (let m = 0; m < this.objectManager.getMaxNumOfLevelsAcrossObjects(); m++) {
+                    
+                    let S_1 = obj.getLevelSize(0);
+                    let S_m = obj.getLevelSize(m);
+                    let v_m = Math.log(2 * S_m / S_1);
+                    let p_kd = 1;   // TODO - viewport prediction
 
-                let Q_tk = this.playbackManager.getCurrentBufferInSeconds();
+                    let delta = this.SEG_DUR;
+                    // let V = 5.5;        // BOLA360 section 4.3
 
-                let optimizationVal = (V * (v_m * p_kd + gamma * delta) - Q_tk / delta) / S_m;
-                if (optimizationVal > maxOptimizationVal) {
-                    maxOptimizationVal = optimizationVal;
-                    selectedLevel = m;
+                    // let V = 200;
+                    // let gamma = 0.9;    // BOLA360 section 4.3
+
+                    let V = this.utils.chosenBolaV;        // BOLA360 section 4.3
+                    let gamma = this.utils.chosenBolaGamma;    // BOLA360 section 4.3
+
+                    let Q_tk = this.playbackManager.getCurrentBufferInSeconds();
+
+                    let optimizationVal = (V * (v_m * p_kd + gamma * delta) - Q_tk / delta) / S_m;
+                    if (optimizationVal > maxOptimizationVal) {
+                        maxOptimizationVal = optimizationVal;
+                        selectedLevel = m;
+                    }
+
+                    console.log(`\nTrial... obj: ${obj.getFolderPath()}, level: ${m}`);
+                    console.log(`S_1: ${S_1}, S_m: ${S_m}, v_m: ${v_m}`);
+                    console.log(`delta: ${delta}, V: ${V}, gamma: ${gamma}, Q_tk: ${Q_tk}`);
+                    console.log(`optimizationVal: ${optimizationVal}`);
                 }
-
-                console.log(`\nTrial... obj: ${obj.getFolderPath()}, level: ${m}`);
-                console.log(`S_1: ${S_1}, S_m: ${S_m}, v_m: ${v_m}`);
-                console.log(`delta: ${delta}, V: ${V}, gamma: ${gamma}, Q_tk: ${Q_tk}`);
-                console.log(`optimizationVal: ${optimizationVal}`);
             }
 
-            objectsToRetrieve.push({ object: obj, utility: maxOptimizationVal, level: selectedLevel });
+            objectsToRetrieve.push({ object: obj, utility: maxOptimizationVal, level: selectedLevel, isVisible: isVisible });
 
             console.log(`\n================`)
             console.log(`>>>> Done... obj: ${obj.getFolderPath()}, utility: ${maxOptimizationVal}, level: ${selectedLevel}`);
@@ -422,7 +845,7 @@ export default class AbrManager {
 
     private fromfileinput(segmentNo: number): Array<{ object: DMeshObject, utility: number, level: number }> {
 
-        console.log(`>>>>>> ---------------------- ABR FROMFILEINPUT ----------------------`)
+        console.log(`>>>>>> ---------------------- ABR FROMFILEINPUT segment #${segmentNo} ----------------------`)
 
         // ================ INIT ========================
         const cam: FreeCamera = this.cameraManager.getCamera();
