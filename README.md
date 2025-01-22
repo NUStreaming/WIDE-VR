@@ -14,6 +14,11 @@ cd client/Babylon.js
 npm install
 ```
 
+```bash
+cd test/puppeteer
+npm install
+```
+
 ## To run
 
 ```bash
@@ -37,7 +42,16 @@ npm run start
 
 ```
 
+
+## Project directory structure
+
+TODO + explain purpose of each component
+
+
+## System interactions
+
+![alt text](https://github.com/NUStreaming/WIDE-VR/blob/main/docs/sequence-diagram.png?raw=true)
+
 ## Potential issues
 
 - In Firefox, if you get cert/quic error (e.g. "Cross-Origin Request Blocked") when retrieving the media segments from Nginx server, open another tab and head to `https://localhost:8443`, then click "Advanced" and accept the cert from this host.
-
