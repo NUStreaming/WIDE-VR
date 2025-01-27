@@ -1,5 +1,6 @@
 # WIDE-VR: Web-based Immersive Delivery Engine for VR applications
-- Code base for paper (under review): "WIDE-VR: An open-source prototype for web-based VR through adaptive streaming of 6DoF content and viewport prediction" (authors: May Lim \<maylim@comp.nus.edu.sg\>, Abdelhak Bentaleb \<abdelhak.bentaleb@concordia.ca\>, Roger Zimmermann \<rogerz@comp.nus.edu.sg\>)
+
+Code base for paper (under review): "WIDE-VR: An open-source prototype for web-based VR through adaptive streaming of 6DoF content and viewport prediction" (authors: May Lim \<maylim@comp.nus.edu.sg\>, Abdelhak Bentaleb \<abdelhak.bentaleb@concordia.ca\>, Roger Zimmermann \<rogerz@comp.nus.edu.sg\>)
 
 ## Setup
 
@@ -12,11 +13,12 @@
 ### Set up certificate
 
 ```bash
+cd server/nginx/config/certs
 vi req.cnf
 sudo openssl req -x509 -nodes -days 730 -newkey rsa:2048 \
  -keyout cert-localhost.key -out cert-localhost.pem -config req.cnf -sha256
 ```
-- Add `cert-localhost.key` and `cert-localhost.pem` to folder `server/nginx/config/certs`
+- Ensure that files `cert-localhost.key` and `cert-localhost.pem` are added to folder `server/nginx/config/certs`
 
 
 ## To Build
