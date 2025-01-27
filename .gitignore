@@ -17,5 +17,3 @@ test/puppeteer/results/*
 # !test/puppeteer/results/process_results_to_csv.py
 test/puppeteer/network-patterns
 !test/puppeteer/network-patterns/5g-lumous.js
-
-README_original.md
