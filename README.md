@@ -29,7 +29,7 @@ cd client/Babylon.js
 npm install
 ```
 
-### Automated testing on puppeteer
+### Optional: Automated testing on puppeteer
 ```bash
 cd test/puppeteer
 npm install
@@ -48,7 +48,7 @@ cd client/Babylon.js
 npm run start
 ```
 
-### nginx server
+### Nginx server
 
 - Update the config files in folder `server/nginx/config` with your system path
 - There are three config files for the different HTTP versions
@@ -57,7 +57,7 @@ npm run start
 sudo nginx -c <path_to_project>/WIDE-VR/server/nginx/config/nginx_h2.conf
 ```
 
-### Automated testing on puppeteer
+### Optional: Automated testing on puppeteer
 
 - Update the player's IP address in `test/puppeteer/run.js`
 ```bash
