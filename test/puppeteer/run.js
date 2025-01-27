@@ -4,25 +4,12 @@ const puppeteer = require("puppeteer-core");
 const CHROME_PATH ="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 //const CHROME_PATH = "/opt/google/chrome/chrome";
 
-// const normalNetworkPatterns = require("./normal-network-patterns.js");
-// const fastNetworkPatterns = require("./fast-network-patterns.js");
 
 // ********* WIDE-VR ********* //
 const networkPatterns5GLumous = require("./network-patterns/5g-lumous.js");
 
 // const fileSizesByFilePath = require("../../server/nginx/static/media/filepath_to_size_mapping.js");  // 300f
 const fileSizesByFilePath = require("../../server/nginx/static/media/filepath_to_size_mapping_600f.js");
-
-// const {QoeEvaluator, QoeInfo} = require("../dash.js/samples/low-latency/abr/LoLp_QoEEvaluation.js");
-
-// let patterns;
-// if (process.env.npm_package_config_ffmpeg_profile === 'PROFILE_FAST') {
-//   patterns = fastNetworkPatterns;
-// } else {
-//   patterns = normalNetworkPatterns
-// }
-
-// let patterns = normalNetworkPatterns
 
 // ********* WIDE-VR ********* //
 let patterns = networkPatterns5GLumous
@@ -75,8 +62,6 @@ sleep(waitSeconds * 1000).then(() => {
         let filenameByVpPrediction = folder + '/results-by-vp-prediction.json';
         let filenameOverall = folder + '/results-overall.json';
         let filenameEvaluate = folder + '/evaluate.json';
-        // let filenameQoePerSegment = folder + '/qoe-by-segment.json';
-        // let filenameThroughput = folder + '/throughput-measurements.json';
       
         fs.writeFileSync(filenameByDownload, JSON.stringify(result.bySegmentDownload));
         fs.writeFileSync(filenameByPlayback, JSON.stringify(result.bySegmentPlayback));
@@ -284,16 +269,6 @@ sleep(waitSeconds * 1000).then(() => {
             readline.close();
             
             fs.writeFileSync(filenameEvaluate, JSON.stringify(evaluate));
-            // fs.writeFileSync(filenameQoePerSegment, JSON.stringify(qoePerSegment));
-            // fs.writeFileSync(filenameThroughput, JSON.stringify(throughputMeasurements));
-  
-            // // Generate csv file
-            // let csv = '';
-            // for (var i = 0; i < qoeBySegmentCsv.length; i++) {
-            //   csv += qoeBySegmentCsv[i];
-            //   csv += '\n';
-            // }
-            // fs.writeFileSync(filenameQoePerSegment, csv);
   
             console.log('Results files generated:');
             console.log('> ' + filenameByDownload);
@@ -302,8 +277,6 @@ sleep(waitSeconds * 1000).then(() => {
             console.log('> ' + filenameByVpPrediction);
             console.log('> ' + filenameOverall);
             console.log('> ' + filenameEvaluate);
-            // console.log('> ' + filenameQoePerSegment);
-            // console.log('> ' + filenameThroughput);
             console.log("Test finished. Press cmd+c to exit.");
           });
         }
@@ -315,15 +288,11 @@ sleep(waitSeconds * 1000).then(() => {
             evaluate.comments = "Batch test, no additional comments."
 
           fs.writeFileSync(filenameEvaluate, JSON.stringify(evaluate));
-        //   fs.writeFileSync(filenameQoePerSegment, JSON.stringify(qoePerSegment));
-        //   fs.writeFileSync(filenameThroughput, JSON.stringify(throughputMeasurements));
   
           console.log('Results files generated:');
           console.log('> ' + filenameByDownload);
           console.log('> ' + filenameOverall);
           console.log('> ' + filenameEvaluate);
-        //   console.log('> ' + filenameQoePerSegment);
-        //   console.log('> ' + filenameThroughput);
           console.log('')
 
           process.exit(0);
@@ -357,23 +326,11 @@ sleep(waitSeconds * 1000).then(() => {
         defaultViewport: null
     });
 
-    // ORIGINAL (puppeteer v2.1.1)
-    // // const page = await browser.newPage();
-    // // Create a new incognito browser context.
-    // const context = await browser.createIncognitoBrowserContext();
-    // // Create a new page in a pristine context.
-    // const page = await context.newPage();
-    // //test mode setuser agent to puppeteer
-    // page.setUserAgent("puppeteer");
-
-    // NEW (puppeteer v22.8.0)
     // Launch the browser and open a new blank page
     const page = await browser.newPage();
     //test mode setuser agent to puppeteer
     page.setUserAgent("puppeteer");
 
-    // await page.goto("http://localhost:3000/samples/low-latency/index.html");
-    // await page.goto("https://127.0.0.1:8080/");
     await page.goto("https://192.168.68.70:8080/");
 
     // await page.setCacheEnabled(false);
@@ -382,25 +339,8 @@ sleep(waitSeconds * 1000).then(() => {
     console.log("Waiting for player to setup.");
     await page.evaluate(() => {
       return new Promise(resolve => {
-        // const hasLoaded = player.getBitrateInfoListFor("video").length !== 0;
-        // if (hasLoaded) {
-        //   console.log('Stream loaded, setup complete.');
-        //   resolve();
-        // } else {
-        //   console.log('Waiting for stream to load.');
-        //   player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, (e) => {
-        //     console.log('Load complete.')
-        //     resolve();
-        // });
-        // }
 
         console.log('Waiting for page to load.');
-        // console.log(player)
-        // resolve();
-        // player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, (e) => {
-        //     console.log('Load complete.')
-        //     resolve();
-        // });
 
         window.addEventListener('sceneInitialize', function () {
             console.log('Scene initialized.');
@@ -426,17 +366,6 @@ sleep(waitSeconds * 1000).then(() => {
      * Wait for playback to stop and Collect test results
      */
     const testResults = await page.evaluate(() => {
-        //   console.log('@@@@@@@@ test1a');
-        //   if (window.stopRecording) {
-        //     // Guard against closing the browser window early
-        //     window.stopRecording();
-        //   }
-        // //   player.pause();
-        // //   return window.abrHistory;
-
-        //   console.log('@@@@@@@@ test1b');
-        //   console.log(window.testResults);
-        //   return window.testResults;
 
         return new Promise(resolve => {
             window.addEventListener('playbackStop', function () {
@@ -462,13 +391,6 @@ sleep(waitSeconds * 1000).then(() => {
     let numStalls = 0;
     if (testResults.bySegmentDownload) {
       resultsBySegmentDownload = testResults.bySegmentDownload;
-    //   for (var key in resultsBySegmentDownload) {
-    //     if (resultsBySegmentDownload.hasOwnProperty(key)) { 
-    //         resultsBySegmentDownload[key].averageBitrate = stats.computeAverageBitrate(resultsBySegmentDownload[key].switchHistory, resultsBySegmentDownload[key].downloadTimeRelative);
-    //         resultsBySegmentDownload[key].numSwitches = resultsBySegmentDownload[key].switchHistory.length;
-    //         if (resultsBySegmentDownload[key].numStalls > numStalls)  numStalls = resultsBySegmentDownload[key].numStalls;
-    //     }
-    //   }
     }
 
     let resultsBySegmentPlayback = {};
@@ -490,26 +412,6 @@ sleep(waitSeconds * 1000).then(() => {
     let resultsOverall = {};
     if (testResults.overall) {
       resultsOverall = testResults.overall;
-    //   resultsOverall.averageBitrate = stats.computeAverageBitrate(resultsOverall.switchHistory);
-    //   resultsOverall.numSwitches = resultsOverall.switchHistory.length;
-    //   resultsOverall.numStalls = numStalls;
-    //   // calculate averageBitrateVariations
-    //   if (resultsOverall.switchHistory.length > 1) {
-    //     let totalBitrateVariations = 0;
-    //     for (var i = 0; i < resultsOverall.switchHistory.length - 1; i++) {
-    //       totalBitrateVariations += Math.abs(resultsOverall.switchHistory[i+1].quality.bitrate - resultsOverall.switchHistory[i].quality.bitrate);
-    //     }
-    //     resultsOverall.averageBitrateVariations = totalBitrateVariations / (resultsOverall.switchHistory.length - 1);
-    //   } else {
-    //     resultsOverall.averageBitrateVariations = 0; 
-    //   }
-    //   // calculate average playback rates
-    //   let pbr = stats.computeAveragePlaybackRate(resultsBySegmentDownload);
-    //   resultsOverall.averagePlaybackRate = pbr.averagePlaybackRate;
-    //   resultsOverall.averagePlaybackRateNonOne = pbr.averagePlaybackRateNonOne;
-    //   // delete unwanted data
-    //   delete resultsOverall.currentLatency;
-    //   delete resultsOverall.currentBufferLength;
     }
 
     let result = {
@@ -520,9 +422,7 @@ sleep(waitSeconds * 1000).then(() => {
       overall: resultsOverall,
       networkProfile: configNetworkProfile,
       networkPattern: NETWORK_PROFILE,
-      abrStrategy: testResults.abrStrategy,
-    //   customPlaybackControl: testResults.customPlaybackControl,
-    //   misc: testResults.misc
+      abrStrategy: testResults.abrStrategy
     };
 
     if (testResults.screenshotsCaptured) {

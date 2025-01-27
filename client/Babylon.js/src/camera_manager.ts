@@ -17,10 +17,6 @@ export enum VpStrategyChoice {
 export default class CameraManager {
     private utils: Utils;
 
-    // private prevRotation: Vector3;              // The rotation of the active camera at the previous frame
-    // private prevRotQuaternion: Quaternion;
-    // private prevPosition: Vector3;              // The position of the active camera at the previous frame
-
     private positionSamples: Vector3[];          // The position of the active camera at the previous frames
     private rotationSamples: Vector3[];          // The rotation of the active camera at the previous frames
 
@@ -29,8 +25,6 @@ export default class CameraManager {
 
     private lastSavedTime: number = 0;          // The frame number when the position and rotation were last saved
     
-    // private maxSamples: number = 24;              // Maximum number of samples to keep
-    // private maxSamples: number = 240;              // Maximum number of samples to keep
     private maxSamples: number;                     // Maximum number of samples to keep
 
     private _chosenVpStrategy: VpStrategyChoice = VpStrategyChoice.None; // The strategy to use for viewport prediction
@@ -42,9 +36,6 @@ export default class CameraManager {
      * Private constructor because CameraManager is a singleton
      */
     public constructor(utils: Utils) {
-        // this.prevPosition = Vector3.Zero();
-        // this.prevRotation = Vector3.Zero();
-        // this.prevRotQuaternion = Quaternion.Identity();
 
         this.positionSamples = [];
         this.rotationSamples = [];
@@ -82,32 +73,6 @@ export default class CameraManager {
                 return "WeightedLinearRegression";
         }
     }
-
-    // /**
-    //  * Call this method after updating to save the camera's position and rotation
-    //  */
-    // public saveCameraPosition = (): void => {
-    //     const cam = this.getCamera();
-
-    //     // .clone() is required so that we don't get a reference
-    //     this.prevPosition = cam.position.clone();
-    //     // console.log('Position & rotation:')
-    //     // console.log(this.prevPosition);
-
-    //     //  UniversalCamera uses rotation and WebXRCamera uses rotationQuaternion !
-    //     if (cam instanceof WebXRCamera) {
-    //         this.prevRotQuaternion = cam.rotationQuaternion.clone();
-            
-    //         // console.log('>>> WebXRCamera');
-    //         // console.log(this.prevRotQuaternion);
-    //     }
-    //     else {
-    //         this.prevRotation = cam.rotation.clone();
-
-    //         // console.log('>>> UniversalCamera');
-    //         // console.log(this.prevRotation);
-    //     }
-    // }
 
     
     /**
@@ -168,65 +133,6 @@ export default class CameraManager {
             throw "Camera Error : No active camera yet !";
         }
     }
-
-    // /**
-    //  * Returns a linear prediction of the active camera in delta seconds.  
-    //  * Don't forget to dispose of this camera after use for memory reasons.
-    //  * @param delta Time elapsed before prediction
-    //  */
-    // public getCameraInTime = (delta: number): FreeCamera => {
-    //     // We make a copy of the active camera
-    //     let futureCamera: FreeCamera;
-    //     const currentCamera = this.getCamera();
-    //     futureCamera = currentCamera.clone("futureCamera") as FreeCamera;
-
-    //     // This is the time since last frame
-    //     //  (when we save the position and rotation)
-    //     const deltaTime = this.utils.scene.deltaTime;
-
-    //     // Linear prediction of the position
-    //     const deltaPos = futureCamera.position
-    //                     .subtract(this.prevPosition)
-    //                     .scale(delta * 1000 / deltaTime);
-    //     futureCamera.position
-    //         .addInPlace(deltaPos);
-
-    //     // Linear prediction of the rotation
-    //     //  As UniversalCamera uses rotation and WebXRCamera uses rotationQuaternion,
-    //     //  we have to separate the 2 cases
-    //     if (currentCamera instanceof WebXRCamera) {
-    //         const currentRotation = currentCamera.rotationQuaternion;
-    //         const deltaRotQuatUnscaled = currentRotation
-    //                                 .multiply(Quaternion.Inverse(this.prevRotQuaternion));
-    //         const nextRotation = Quaternion.Slerp(   
-    //                             currentRotation, 
-    //                             currentRotation
-    //                                 .multiply(deltaRotQuatUnscaled),
-    //                             delta * 1000 / deltaTime
-    //                         );
-    
-    //         futureCamera.rotationQuaternion = nextRotation;
-
-    //         // As the predicted camera is not a WebXRCamera, we have to rotate it beforehand ; it won't be rotated afterwards
-    //         //  Check ObjectManager.getVisibleObjects
-    //         futureCamera.rotationQuaternion.multiplyInPlace(Quaternion.FromEulerAngles(0, -Math.PI, 0));
-    //     }
-    //     else {
-    //         const deltaRot = futureCamera.rotation
-    //                     .subtract(this.prevRotation)
-    //                     .scale(delta * 1000 / deltaTime);
-    //         futureCamera.rotation
-    //             .addInPlace(deltaRot);
-    //     }        
-        
-    //     // Forcing computation of matrices
-    //     futureCamera.getViewMatrix(true);
-    //     futureCamera.getProjectionMatrix(true);
-        
-    //     // Return the predicted camera (has to be destroyed after being use)
-    //     return futureCamera;
-    // }
-
     
 
     /**
@@ -284,22 +190,6 @@ export default class CameraManager {
      */
     private vpLinearPredictor_Original(futureCamera: FreeCamera, delta: number): FreeCamera {
         console.log(`futureCamera.position (bef): ${futureCamera.position}`);
-        // This is the time since last frame
-        //  (when we last saved the position and rotation)
-        // const deltaTime = this.utils.scene.deltaTime;
-
-        // Linear prediction of the position based on last sample only
-        // const deltaPos = futureCamera.position
-        //                 .subtract(this.positionSamples2D[this.positionSamples2D.length-1].p)
-        //                 .scale(delta * 1000 / deltaTime);
-        // futureCamera.position
-        //     .addInPlace(deltaPos);
-
-
-
-
-        // let timeNow = performance.now();
-        // const deltaTime = timeNow - this.positionSamples2D[this.positionSamples2D.length-1].timestamp;
 
         // Linear prediction of the position based on last two samples only
         const timeNow = performance.now();
@@ -312,32 +202,12 @@ export default class CameraManager {
         futureCamera.position
             .addInPlace(deltaPos);
 
-        console.log('98765')
-        console.log(`timeNow: ${timeNow}`);
-        console.log(`this.utils.scene.deltaTime: ${this.utils.scene.deltaTime}`);
-        console.log(`deltaTime: ${deltaTime}`);
-        console.log(`delta: ${delta}`);
-        console.log(`delta * 1000 / deltaTime: ${delta * 1000 / deltaTime}`);
-        console.log(this.positionSamples2D);
-        console.log(this.positionSamples2D[this.positionSamples2D.length-1])
-        console.log(`futureCamera.position (aft): ${futureCamera.position}`);
-
-
-
-
         // Linear prediction of the rotation based on last sample only
         const deltaRot = futureCamera.rotation
                     .subtract(this.rotationSamples2D[this.rotationSamples2D.length-1].r)
                     .scale(delta * 1000 / deltaTime);
         futureCamera.rotation
             .addInPlace(deltaRot);
-
-        console.log('@@@@@@@@@@@@@@@@@@@@@ vpLinearPredictor');
-        console.log(`this.positionSamples[this.positionSamples.length-1]: ${this.positionSamples[this.positionSamples.length-1]}`);
-        console.log(`this.rotationSamples[this.rotationSamples.length-1]: ${this.rotationSamples[this.rotationSamples.length-1]}`);
-        console.log(`delta: ${delta}`);
-        console.log(`deltaPos: ${deltaPos}`);
-        console.log(`deltaRot: ${deltaRot}`);
 
         return futureCamera;
     }
@@ -359,9 +229,6 @@ export default class CameraManager {
         const ptimestamp = this.positionSamples2D.slice(0, 2).map(sample => sample.timestamp);
 
         let slope_pX, intercept_pX, slope_pY, intercept_pY, slope_pZ, intercept_pZ;
-        // ({ slope: slope_pX, intercept: intercept_pX } = this.calcLinearRegressionParams2D(pX, ptimestamp));
-        // ({ slope: slope_pY, intercept: intercept_pY } = this.calcLinearRegressionParams2D(pY, ptimestamp));
-        // ({ slope: slope_pZ, intercept: intercept_pZ } = this.calcLinearRegressionParams2D(pZ, ptimestamp));
         ({ slope: slope_pX, intercept: intercept_pX } = this.calcLinearRegressionParams2D(ptimestamp, pX));
         ({ slope: slope_pY, intercept: intercept_pY } = this.calcLinearRegressionParams2D(ptimestamp, pY));
         ({ slope: slope_pZ, intercept: intercept_pZ } = this.calcLinearRegressionParams2D(ptimestamp, pZ));
@@ -385,9 +252,6 @@ export default class CameraManager {
         const rtimestamp = this.rotationSamples2D.slice(0, 2).map(sample => sample.timestamp);
 
         let slope_rX, intercept_rX, slope_rY, intercept_rY, slope_rZ, intercept_rZ;
-        // ({ slope: slope_rX, intercept: intercept_rX } = this.calcLinearRegressionParams2D(rX, rtimestamp));
-        // ({ slope: slope_rY, intercept: intercept_rY } = this.calcLinearRegressionParams2D(rY, rtimestamp));
-        // ({ slope: slope_rZ, intercept: intercept_rZ } = this.calcLinearRegressionParams2D(rZ, rtimestamp));
         ({ slope: slope_rX, intercept: intercept_rX } = this.calcLinearRegressionParams2D(rtimestamp, rX));
         ({ slope: slope_rY, intercept: intercept_rY } = this.calcLinearRegressionParams2D(rtimestamp, rY));
         ({ slope: slope_rZ, intercept: intercept_rZ } = this.calcLinearRegressionParams2D(rtimestamp, rZ));
@@ -400,105 +264,9 @@ export default class CameraManager {
         );
         futureCamera.rotation = futureRotation;
 
-        //
-        // For debugging and verification
-        //
-        // console.log(`@@@@@@@@@@@@@@@@@@@@@ vpLinearRegression (isWeightedLr:${isWeightedLr}) ROTATION`);
-        // console.log(`delta: ${delta}`);
-        // console.log(`futureRotation: ${futureRotation}`);
-        // let rxstr='';
-        // let rystr='';
-        // let rzstr='';
-        // for (let i = 0; i < this.rotationSamples.length; i++) {
-        //     rxstr += this.rotationSamples[i].x.toFixed(5) + ',';
-        //     rystr += this.rotationSamples[i].y.toFixed(5) + ',';
-        //     rzstr += this.rotationSamples[i].z.toFixed(5) + ',';
-        // }
-        // console.log(rxstr);
-        // console.log(rystr);
-        // console.log(rzstr);
-
-
         // Return futureCamera updated with predicted position and rotation
         return futureCamera;
     }
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-    // /**
-    //  * Viewport prediction using linear regression based on past n samples
-    //  */
-    // private vpLinearRegression(futureCamera: FreeCamera, delta: number): FreeCamera {
-    //     // Ensure we have enough samples to perform regression
-    //     if (this.positionSamples.length < this.minSamplesRegression || this.rotationSamples.length < this.minSamplesRegression) {
-    //         return futureCamera; // Not enough samples, return the current state
-    //     }
-
-    //     // Calculate linear regression for position samples
-    //     // const { slope: posSlope, intercept: posIntercept } = this.calcLinearRegressionParams(this.positionSamples);
-    //     // const futurePosition = posSlope.scale(delta).add(posIntercept);
-    //     // futureCamera.position = futurePosition;
-
-    //     const { slope: posSlope, intercept: posIntercept } = this.calcLinearRegressionParams(this.positionSamples);
-    //     const futurePosition = posSlope.scale(delta).add(posIntercept);
-    //     futureCamera.position = futurePosition;
-
-
-    //     console.log('@@@@@@@@@@@@@@@@@@@@@ vpLinearRegression');
-    //     console.log(`delta: ${delta}`);
-    //     console.log(`posSlope: ${posSlope}`);
-    //     console.log(`posIntercept: ${posIntercept}`);
-    //     console.log(`futurePosition: ${futurePosition}`);
-    //     console.log(this.positionSamples)
-        
-    //     let xstr='';
-    //     let ystr='';
-    //     let zstr='';
-    //     for (let i = 0; i < this.positionSamples.length; i++) {
-    //         xstr += this.positionSamples[i].x.toFixed(5) + ',';
-    //         ystr += this.positionSamples[i].y.toFixed(5) + ',';
-    //         zstr += this.positionSamples[i].z.toFixed(5) + ',';
-    //     }
-    //     console.log(xstr);
-    //     console.log(ystr);
-    //     console.log(zstr);
-
-    //     // Calculate linear regression for rotation samples
-    //     const { slope: rotSlope, intercept: rotIntercept } = this.calcLinearRegressionParams(this.rotationSamples);
-    //     const futureRotation = rotSlope.scale(delta).add(rotIntercept);
-    //     futureCamera.rotation = futureRotation;
-
-    //     return futureCamera;
-    // }
-
-    // private calcLinearRegressionParams(samples: Vector3[]): { slope: Vector3, intercept: Vector3 } {
-    //     const n = samples.length;
-    //     let sumX = 0, sumY = new Vector3(0, 0, 0), sumXY = new Vector3(0, 0, 0), sumX2 = 0;
-
-    //     for (let i = 0; i < n; i++) {
-    //         sumX += i;
-    //         sumY.addInPlace(samples[i]);
-    //         sumXY.addInPlace(samples[i].scale(i));
-    //         sumX2 += i * i;
-    //     }
-
-    //     const slope = sumXY.scale(n).subtract(sumY.scale(sumX)).scale(1 / (n * sumX2 - sumX * sumX));
-    //     const intercept = sumY.subtract(slope.scale(sumX)).scale(1 / n);
-
-    //     return { slope, intercept };
-    // }
-
-    
     
     
     /**
@@ -509,11 +277,6 @@ export default class CameraManager {
         if (this.positionSamples.length < this.minSamplesRegression || this.rotationSamples.length < this.minSamplesRegression) {
             return futureCamera; // Not enough samples, return the current state
         }
-
-        // Apply linear regression to x, y, and z positional coordinates
-        // const pX = this.positionSamples.map(p => p.x);
-        // const pY = this.positionSamples.map(p => p.y);
-        // const pZ = this.positionSamples.map(p => p.z);
         
         const pX = this.positionSamples2D.map(sample => sample.p.x);
         const pY = this.positionSamples2D.map(sample => sample.p.y);
@@ -523,25 +286,11 @@ export default class CameraManager {
         let slope_pX, intercept_pX, slope_pY, intercept_pY, slope_pZ, intercept_pZ;
 
         if (!isWeightedLr) {
-            // ({ slope: slope_pX, intercept: intercept_pX } = this.calcLinearRegressionParams(pX));
-            // ({ slope: slope_pY, intercept: intercept_pY } = this.calcLinearRegressionParams(pY));
-            // ({ slope: slope_pZ, intercept: intercept_pZ } = this.calcLinearRegressionParams(pZ));
-            
-            // ({ slope: slope_pX, intercept: intercept_pX } = this.calcLinearRegressionParams2D(pX, ptimestamp));
-            // ({ slope: slope_pY, intercept: intercept_pY } = this.calcLinearRegressionParams2D(pY, ptimestamp));
-            // ({ slope: slope_pZ, intercept: intercept_pZ } = this.calcLinearRegressionParams2D(pZ, ptimestamp));
             ({ slope: slope_pX, intercept: intercept_pX } = this.calcLinearRegressionParams2D(ptimestamp, pX));
             ({ slope: slope_pY, intercept: intercept_pY } = this.calcLinearRegressionParams2D(ptimestamp, pY));
             ({ slope: slope_pZ, intercept: intercept_pZ } = this.calcLinearRegressionParams2D(ptimestamp, pZ));
         } 
         else {  // Weighted Linear Regression
-            // ({ slope: slope_pX, intercept: intercept_pX } = this.calcWeightedLinearRegressionParams(pX));
-            // ({ slope: slope_pY, intercept: intercept_pY } = this.calcWeightedLinearRegressionParams(pY));
-            // ({ slope: slope_pZ, intercept: intercept_pZ } = this.calcWeightedLinearRegressionParams(pZ));
-            
-            // ({ slope: slope_pX, intercept: intercept_pX } = this.calcWeightedLinearRegressionParams2D(pX, ptimestamp));
-            // ({ slope: slope_pY, intercept: intercept_pY } = this.calcWeightedLinearRegressionParams2D(pY, ptimestamp));
-            // ({ slope: slope_pZ, intercept: intercept_pZ } = this.calcWeightedLinearRegressionParams2D(pZ, ptimestamp));
             ({ slope: slope_pX, intercept: intercept_pX } = this.calcWeightedLinearRegressionParams2D(ptimestamp, pX));
             ({ slope: slope_pY, intercept: intercept_pY } = this.calcWeightedLinearRegressionParams2D(ptimestamp, pY));
             ({ slope: slope_pZ, intercept: intercept_pZ } = this.calcWeightedLinearRegressionParams2D(ptimestamp, pZ));
@@ -574,7 +323,7 @@ export default class CameraManager {
         //
         // For debugging and verification
         //
-        // console.log(`@@@@@@@@@@@@@@@@@@@@@ vpLinearRegression (isWeightedLr:${isWeightedLr}) POSITION`);
+        // console.log(`// vpLinearRegression (isWeightedLr:${isWeightedLr}) position //`);
         // console.log(`delta: ${delta}`);
         // console.log(`futurePosition: ${futurePosition}`);
         // console.log(`slope_pX: ${slope_pX}`);
@@ -594,10 +343,6 @@ export default class CameraManager {
 
         // Apply linear regression to x (pitch), y (yaw), and z (roll) rotational coordinates
         // Ref: https://doc.babylonjs.com/features/featuresDeepDive/mesh/transforms/center_origin/rotation_conventions
-        // const rX = this.rotationSamples.map(r => r.x);
-        // const rY = this.rotationSamples.map(r => r.y);
-        // const rZ = this.rotationSamples.map(r => r.z);
-
         const rX = this.rotationSamples2D.map(sample => sample.r.x);
         const rY = this.rotationSamples2D.map(sample => sample.r.y);
         const rZ = this.rotationSamples2D.map(sample => sample.r.z);
@@ -606,25 +351,11 @@ export default class CameraManager {
         let slope_rX, intercept_rX, slope_rY, intercept_rY, slope_rZ, intercept_rZ;
         
         if (!isWeightedLr) {
-            // ({ slope: slope_rX, intercept: intercept_rX } = this.calcLinearRegressionParams(rX));
-            // ({ slope: slope_rY, intercept: intercept_rY } = this.calcLinearRegressionParams(rY));
-            // ({ slope: slope_rZ, intercept: intercept_rZ } = this.calcLinearRegressionParams(rZ));
-            
-            // ({ slope: slope_rX, intercept: intercept_rX } = this.calcLinearRegressionParams2D(rX, rtimestamp));
-            // ({ slope: slope_rY, intercept: intercept_rY } = this.calcLinearRegressionParams2D(rY, rtimestamp));
-            // ({ slope: slope_rZ, intercept: intercept_rZ } = this.calcLinearRegressionParams2D(rZ, rtimestamp));
             ({ slope: slope_rX, intercept: intercept_rX } = this.calcLinearRegressionParams2D(rtimestamp, rX));
             ({ slope: slope_rY, intercept: intercept_rY } = this.calcLinearRegressionParams2D(rtimestamp, rY));
             ({ slope: slope_rZ, intercept: intercept_rZ } = this.calcLinearRegressionParams2D(rtimestamp, rZ));
         }
         else {  // Weighted Linear Regression
-            // ({ slope: slope_rX, intercept: intercept_rX } = this.calcWeightedLinearRegressionParams(rX));
-            // ({ slope: slope_rY, intercept: intercept_rY } = this.calcWeightedLinearRegressionParams(rY));
-            // ({ slope: slope_rZ, intercept: intercept_rZ } = this.calcWeightedLinearRegressionParams(rZ));
-            
-            // ({ slope: slope_rX, intercept: intercept_rX } = this.calcWeightedLinearRegressionParams2D(rX, rtimestamp));
-            // ({ slope: slope_rY, intercept: intercept_rY } = this.calcWeightedLinearRegressionParams2D(rY, rtimestamp));
-            // ({ slope: slope_rZ, intercept: intercept_rZ } = this.calcWeightedLinearRegressionParams2D(rZ, rtimestamp));
             ({ slope: slope_rX, intercept: intercept_rX } = this.calcWeightedLinearRegressionParams2D(rtimestamp, rX));
             ({ slope: slope_rY, intercept: intercept_rY } = this.calcWeightedLinearRegressionParams2D(rtimestamp, rY));
             ({ slope: slope_rZ, intercept: intercept_rZ } = this.calcWeightedLinearRegressionParams2D(rtimestamp, rZ));
@@ -641,7 +372,7 @@ export default class CameraManager {
         //
         // For debugging and verification
         //
-        // console.log(`@@@@@@@@@@@@@@@@@@@@@ vpLinearRegression (isWeightedLr:${isWeightedLr}) ROTATION`);
+        // console.log(`// vpLinearRegression (isWeightedLr:${isWeightedLr}) rotation //`);
         // console.log(`delta: ${delta}`);
         // console.log(`futureRotation: ${futureRotation}`);
         // let rxstr='';
@@ -747,28 +478,6 @@ export default class CameraManager {
         return slope * x + intercept;
     }
     
-    
-    // /**
-    //  * Viewport prediction using weighted linear regression based on past n samples
-    //  */
-    // private vpWeightedLinearRegression(futureCamera: FreeCamera, delta: number): FreeCamera {
-    //     // Ensure we have enough samples to perform regression
-    //     if (this.positionSamples.length < this.minSamplesRegression || this.rotationSamples.length < this.minSamplesRegression) {
-    //         return futureCamera; // Not enough samples, return the current state
-    //     }
-        
-    //     // Calculate weighted linear regression for position
-    //     const { slope: posSlope, intercept: posIntercept } = this.calcWeightedLinearRegressionParams(this.positionSamples);
-    //     const futurePosition = posSlope.scale(delta).add(posIntercept);
-    //     futureCamera.position = futurePosition;
-        
-    //     // Calculate weighted linear regression for rotation
-    //     const { slope: rotSlope, intercept: rotIntercept } = this.calcWeightedLinearRegressionParams(this.rotationSamples);
-    //     const futureRotation = rotSlope.scale(delta).add(rotIntercept);
-    //     futureCamera.rotation = futureRotation;
-
-    //     return futureCamera;
-    // }
 
     private calcWeightedLinearRegressionParamsOLD(samples: Vector3[]): { slope: Vector3, intercept: Vector3 } {
         const n = samples.length;

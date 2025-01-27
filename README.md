@@ -29,7 +29,7 @@ cd client/Babylon.js
 npm install
 ```
 
-### Optional: Automated testing on puppeteer
+### Automated testing on puppeteer (optional)
 ```bash
 cd test/puppeteer
 npm install
@@ -57,7 +57,7 @@ npm run start
 sudo nginx -c <path_to_project>/WIDE-VR/server/nginx/config/nginx_h2.conf
 ```
 
-### Optional: Automated testing on puppeteer
+### Automated testing on puppeteer (optional)
 
 - Update the player's IP address in `test/puppeteer/run.js`
 ```bash
@@ -99,3 +99,5 @@ WIDE-VR
 ## Potential Issues
 
 - If you get cert/quic error (e.g. "Cross-Origin Request Blocked") when retrieving the media segments from Nginx server, open another tab and head to `https://localhost:8443`, then click "Advanced" and accept the cert from this host.
+
+- If Chrome is unable to run quic, re-run the application with the following params (note placeholders): `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --enable-quic --allow-insecure-localhost --origin-to-force-quic-on=127.0.0.1:8443,<alternative_ip_address>:8443 --ignore-certificate-errors  --user-data-dir=/tmp/temp-chrome --ignore-certificate-errors-spki-list="<generate_spki_from_your_cert>"`
