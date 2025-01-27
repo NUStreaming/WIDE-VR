@@ -22,10 +22,6 @@ export default class RouteManager {
     private currDirection: Vector3|null = null;
     private prevDirectionUpdateTime: number = 0;
 
-    // private movementIsPaused: boolean = false;
-    // private movementPauseStartTime: number = 0;
-    // private movementPauseDuration: number = 0;
-
     public constructor(cameraManager: CameraManager, playbackManager: PlaybackManager, scene: Scene) {
         this.cameraManager = cameraManager;
         this.playbackManager = playbackManager;
@@ -84,73 +80,6 @@ export default class RouteManager {
                 return;
         }
     }
-
-
-    // private backforth = () => {
-    //     const cam = this.cameraManager.getCamera();
-    //     const movementScaleFactor = 0.005;  // Affects movement speed
-    //     const changeDirectionInterval = 3;  // In seconds
-        
-    //     // This function runs before the scene renders (per engine's rendering fps)
-    //     this.scene.onBeforeRenderObservable.add(() => {
-
-    //         // Check if interval time has passed
-    //         const currTime = performance.now();
-    //         if ((currTime - this.prevDirectionUpdateTime) > changeDirectionInterval * 1000) {
-                
-    //             // Toggle direction
-    //             if (this.currDirection?.equals(Vector3.Backward())) this.currDirection = Vector3.Forward();
-    //             else this.currDirection = Vector3.Backward();  // Includes the case of first move
-                
-    //             this.prevDirectionUpdateTime = currTime;
-    //         }
-            
-    //         // Update camera position
-    //         if (this.currDirection) {
-    //             const deltaPos = cam.getDirection(
-    //                             this.currDirection)
-    //                             .scale(movementScaleFactor);
-
-    //             cam.position.addInPlace(deltaPos);
-    //         }
-    //     });
-    // }
-
-    // private leftright = () => {
-    //     const cam = this.cameraManager.getCamera();
-    //     const movementScaleFactor = 0.005;  // Affects movement speed
-    //     const changeDirectionInterval = 3;  // In seconds
-        
-    //     // This function runs before the scene renders (per engine's rendering fps)
-    //     this.scene.onBeforeRenderObservable.add(() => {
-
-    //         // Check if interval time has passed
-    //         const currTime = performance.now();
-    //         const currTimeLessPauseDuration = currTime - this.movementPauseDuration;
-            
-    //         // if ((currTime - this.prevDirectionUpdateTime) > changeDirectionInterval * 1000) {
-    //         if ((currTimeLessPauseDuration - this.prevDirectionUpdateTime) > changeDirectionInterval * 1000) {
-                
-    //             // Toggle direction
-    //             if (this.currDirection?.equals(Vector3.Left())) this.currDirection = Vector3.Right();
-    //             else this.currDirection = Vector3.Left();  // Includes the case of first move
-                
-    //             this.prevDirectionUpdateTime = currTime;
-    //             this.movementPauseDuration = 0;
-    //             // this.prevDirectionUpdateTime = currTimeLessPauseDuration;
-    //         }
-
-    //         // Update camera position
-    //         // if (this.currDirection) {
-    //         if (!this.movementIsPaused && this.currDirection) {
-    //             const deltaPos = cam.getDirection(
-    //                             this.currDirection)
-    //                             .scale(movementScaleFactor);
-
-    //             cam.position.addInPlace(deltaPos);
-    //         }
-    //     });
-    // }
 
     private leftright = () => {
         const cam = this.cameraManager.getCamera();

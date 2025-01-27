@@ -18,9 +18,7 @@ export default class DownloadManager {
     private cameraManager: CameraManager;
     private playbackManager: PlaybackManager;
     private utils: Utils;
-
-    // private fps: number = 15;
-    // private frameNo: number = 1;
+    
     private segmentNo: number = 1;
     private totalBandwidthInParallel: number = 0;
 
@@ -102,7 +100,6 @@ export default class DownloadManager {
         // Download geometry
         const geometryFoldername = dMeshObject.getFolderPath().replace('./', '');
         const geometryFilename = dMeshObject.getMetadata().Levels[geometryQuality].filename.replace(/Frame_[0-9]+/i, `Frame_${frameId}`);
-        // const geometryResUrl = `https://${this.utils.serverIp}:8443/${geometryFoldername}${geometryFilename}`.replace('assets','static/media');
         const geometryResUrl = `${geometryFoldername}${geometryFilename}`;
 
         const startrequest = performance.now(); // Time before requesting the LoD
@@ -142,7 +139,6 @@ export default class DownloadManager {
         if (this.utils.includeTexture) {
             textureFoldername = dMeshObject.getFolderPath().replace('./', '');
             textureFilename = dMeshObject.getMetadata().Textures[textureQuality].filename.replace(/Frame_[0-9]+/i, `Frame_${frameId}`);
-            // textureResUrl = `https://${this.utils.serverIp}:8443/${textureFoldername}${textureFilename}`.replace('assets','static/media');
             textureResUrl = `${textureFoldername}${textureFilename}`;
             
             // console.log(`### frameNo: ${frameNo} /1/ ${performance.now()}`)
@@ -154,18 +150,13 @@ export default class DownloadManager {
 
             material.backFaceCulling = false;
             material.albedoTexture = texture;
-            // console.log(`### frameNo: ${frameNo} /3/ ${performance.now()}`)
             material.metallicTexture = texture;
-            // console.log(`### frameNo: ${frameNo} /4/ ${performance.now()}`)
             material.roughness = 1;
             material.metallic = 0.3;
             material.freeze();  // Try speeding up
 
             textureWidth = texture.getSize().width;
             textureHeight = texture.getSize().height;
-
-            // // &&&&&&&&&&&&&&&&&&&&&&&&&&&& testing
-            // rawTextureData = <ArrayBuffer> await Tools.LoadFileAsync(textureResUrl);
         }
 
         const dMeshSegment = new DMeshSegment( geometryData, material, rawTextureData );
@@ -183,83 +174,4 @@ export default class DownloadManager {
         await this.bufferManager.addSegment(dMeshObject, dMeshSegment);
     }
 
-
-
-    
-    // private async initWebTransportSession() {
-    //     // const url = "https://localhost:4434/wtDownloader";
-    //     const url = `https://wsss.deno.dev/`;
-    //     const transport = new WebTransport(url);
-
-    //     // Optionally, set up functions to respond to the connection closing:
-    //     transport.closed
-    //     .then(() => {
-    //         console.log(`The HTTP/3 connection to ${url} closed gracefully.`);
-    //     })
-    //     .catch((error: Error) => {
-    //         console.error(`The HTTP/3 connection to ${url} closed due to `, error);
-    //     });
-
-    //     // Once .ready fulfilled, the connection can be used
-    //     await transport.ready;
-
-    //     // Sending datagrams to the server
-    //     const writer = transport.datagrams.writable.getWriter();
-    //     const data1 = new Uint8Array([65, 66, 67]);
-    //     const data2 = new Uint8Array([68, 69, 70, 71]);
-    //     writer.write(data1);
-    //     setTimeout(() => {
-    //     writer.write(data2);
-    //     }, 1e3);
-
-    //     setTimeout(() => {
-    //     // close the connection
-    //     transport.close({
-    //         closeCode: 3000,
-    //         reason: "close connection by setTimeout",
-    //     });
-    //     }, 3e3);
-
-    //     // Read datagrams from the server.
-    //     const reader = transport.datagrams.readable.getReader();
-    //     while (true) {
-    //     const { value, done } = await reader.read();
-    //     if (done) {
-    //         break;
-    //     }
-    //     console.log(value);
-    //     }
-
-
-
-
-
-    //     // // Init WebTransport session
-    //     // const streamReader = async (stream: any, errorText: any, dataReceivedFunction: any) => {
-    //     //     try {
-    //     //         let reader = stream.getReader();
-    //     //         while (true) {
-    //     //         var data = await reader.read();
-    //     //         if (data.done) {
-    //     //             break;
-    //     //         }
-    //     //         dataReceivedFunction(data.value);
-    //     //         }
-    //     //     } catch(error) {
-    //     //         console.log(errorText + ':', error);
-    //     //     }
-    //     // };
-
-    //     // // Text encoder and decoder
-    //     // let encoder = new TextEncoder();
-    //     // let decoder = new TextDecoder();
-
-    //     // // Connect to WebTransport server
-    //     // let transport = new WebTransport("https://localhost:4434/wtDownloader");
-    //     // await transport.ready;
-
-    //     // transport.closed
-    //     //     .then(() => console.log('Connection closed normally'))
-    //     //     .catch(error => console.log('Connection closed abruptly', error));
-    // }
 }

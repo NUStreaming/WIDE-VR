@@ -19,9 +19,7 @@ export default class Utils {
     public captureScreenshotInterval: number = 1; // in frames
     // public captureScreenshotInterval: number = 2; // in frames
 
-    // public serverIp: string = "192.168.1.16"
-    // public serverIp: string = "localhost"
-
+    
     // public serverIp: string = "127.0.0.1"
     public serverIp: string = "192.168.68.70" // Ubuntu nginx
 

@@ -53,15 +53,6 @@ export default class StatsLogger {
         segmentStats.set('textureWidth', dMeshSegment.textureWidth);
         segmentStats.set('textureHeight', dMeshSegment.textureHeight);
 
-        // segmentStats.set('objectDistance', Vector3.Distance(dMeshObject.getPosition(), this.cameraManager.getCamera().position));
-
-        // segmentStats.set('bandwidthKBps', SpeedManager.getBandwidth());
-        // segmentStats.set('downloadSpeedKBps', SpeedManager.getDSpeed());
-        // segmentStats.set('bufferS', this.playbackManager.getCurrentBufferInSeconds());
-
-        // segmentStats.set('stallMs', this.cumulativeStall - this.previousCumulativeStall);
-        // segmentStats.set('cumulativeStallMs', this.cumulativeStall);
-        // this.previousCumulativeStall = this.cumulativeStall;
 
         this.statsBySegmentOnDownload.push(Object.fromEntries(segmentStats));
     }
