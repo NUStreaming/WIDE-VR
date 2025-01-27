@@ -98,6 +98,6 @@ WIDE-VR
 
 ## Potential Issues
 
-- If you get cert/quic error (e.g. "Cross-Origin Request Blocked") when retrieving the media segments from Nginx server, open another tab and head to `https://localhost:8443`, then click "Advanced" and accept the cert from this host.
+- If you get "Unable to load" (from media server) errors or "Cross-Origin Request Blocked" errors, open another tab and head to `https://<server_ip>:8443`, then click "Advanced" and accept the cert from this host.
 
 - If Chrome is unable to run quic, re-run the application with the following params (note placeholders): `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --enable-quic --allow-insecure-localhost --origin-to-force-quic-on=127.0.0.1:8443,<alternative_ip_address>:8443 --ignore-certificate-errors  --user-data-dir=/tmp/temp-chrome --ignore-certificate-errors-spki-list="<generate_spki_from_your_cert>"`

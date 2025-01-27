@@ -3,7 +3,6 @@ import { ShadowGenerator } from "@babylonjs/core/Lights";
 import {DracoCompression, Mesh, TransformNode} from "@babylonjs/core/Meshes";
 
 import DMeshObject from './dmesh_object';
-import StrategyManager from "./strategy_manager";
 import { WebXRCamera } from "@babylonjs/core/XR/webXRCamera";
 import Utils from "./game_utils";
 

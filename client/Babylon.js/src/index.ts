@@ -24,7 +24,6 @@ import "@babylonjs/inspector";
 
 import ObjectManager from './object_manager';
 import CameraManager, {VpStrategyChoice} from './camera_manager';
-import StrategyManager, {ChooseStrategy} from "./strategy_manager";
 import AbrManager, {AbrSegmentInput, StrategyChoice} from "./abr_manager";
 import Metrics, {ChooseMetric} from "./metrics";
 import Utils from "./game_utils";
@@ -54,7 +53,6 @@ interface TPPoint {
 class DMeshScene
 {
     private cameraManager: CameraManager;
-    private strategyManager: StrategyManager;
     private abrManager: AbrManager;
     private playbackManager: PlaybackManager;
     private downloadManager: DownloadManager;
@@ -110,7 +108,6 @@ class DMeshScene
      */
     constructor(utils: Utils,
                 objectManager: ObjectManager,
-                strategyManager: StrategyManager,
                 abrManager: AbrManager,
                 playbackManager: PlaybackManager,
                 downloadManager: DownloadManager,
@@ -118,7 +115,6 @@ class DMeshScene
                 routeManager: RouteManager) {
         
         this.objectManager = objectManager;
-        this.strategyManager = strategyManager;
         this.abrManager = abrManager;
         this.playbackManager = playbackManager;
         this.downloadManager = downloadManager;
@@ -407,7 +403,6 @@ class DMeshScene
         panel.addControl(this.metricsButton);
         
 
-        // Selector : this.strategyManager
         this.stratButton = new Button3D("stratButton");
         
         const textStrat = new TextBlock();
@@ -696,8 +691,9 @@ const initializeManagers = () => {
     const bufferManager = new BufferManager(objectManager, playbackManager);
     const abrManager = new AbrManager(utils, objectManager, cameraManager, playbackManager);
     const downloadManager = new DownloadManager(utils, bufferManager, objectManager, abrManager, cameraManager, playbackManager);
-    const strategyManager = new StrategyManager(cameraManager, downloadManager, objectManager);
-    const dmeshScene = new DMeshScene(utils, objectManager, strategyManager, abrManager, playbackManager, downloadManager, cameraManager, routeManager);
+    // const strategyManager = new StrategyManager(cameraManager, downloadManager, objectManager);
+    // const dmeshScene = new DMeshScene(utils, objectManager, strategyManager, abrManager, playbackManager, downloadManager, cameraManager, routeManager);
+    const dmeshScene = new DMeshScene(utils, objectManager, abrManager, playbackManager, downloadManager, cameraManager, routeManager);
 
     // TODO - Is this deviation from the above design pattern ok?
     StatsLogger.cameraManager = cameraManager;
