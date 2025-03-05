@@ -15,5 +15,6 @@ test/puppeteer/node_modules
 test/puppeteer/results/*
 # !test/puppeteer/results/plot_results_chart_1.py
 # !test/puppeteer/results/process_results_to_csv.py
-test/puppeteer/network-patterns
-!test/puppeteer/network-patterns/5g-lumous.js
+test/puppeteer/network-patterns/preprocessed
+test/puppeteer/network-patterns/5g-lumous-v1.js
+test/puppeteer/network-patterns/5g-lumous-v2.js
