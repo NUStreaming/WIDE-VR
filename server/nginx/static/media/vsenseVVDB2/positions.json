@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Matis_obj_Draco-Jpeg",
+        "position": [0, 2, 0],
+        "rotation": [10, 270, 270],
+        "scale": 1
+    },
+    {
+        "name": "Rafa2_obj_Draco-Jpeg",
+        "position": [-2, 2.2, 1],
+        "rotation": [20, 50, 270],
+        "scale": 1
+    }
+]

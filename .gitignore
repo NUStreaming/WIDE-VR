@@ -5,9 +5,13 @@ client/Babylon.js/node_modules
 client/Babylon.js/docs
 client/Babylon.js/README_original.md
 
-# server/nginx/static/media/vsenseVVDB2/*
-# server/nginx/static/media/vsenseVVDB2_600f/*
 server/nginx/static/media/*
+!server/nginx/static/media/vsenseVVDB2
+server/nginx/static/media/vsenseVVDB2/*
+!server/nginx/static/media/vsenseVVDB2/positions.json
+!server/nginx/static/media/vsenseVVDB2_600f
+server/nginx/static/media/vsenseVVDB2_600f/*
+!server/nginx/static/media/vsenseVVDB2_600f/positions.json
 server/nginx/config/certs/*
 server/nginx/logs/*
 
