@@ -1,0 +1,60 @@
+{
+    "name": "Rafa2_obj_Draco-Jpeg",
+    "nb_levels": 4,
+    "nb_textures": 1,
+    "nb_frames": 300,
+    "area": 10.849,
+    "Levels": [
+        {
+            "level": 0,
+            "filename": "Rafa2_drc0/Frame_00001_qp08_qt06_cl10.drc",
+            "size": 36,
+            "hdrvdp2": 0.606
+        },
+        {
+            "level": 1,
+            "filename": "Rafa2_drc1/Frame_00001_qp10_qt10_cl10.drc",
+            "size": 52,
+            "hdrvdp2": 0.432
+        },
+        {
+            "level": 2,
+            "filename": "Rafa2_drc3/Frame_00001_qp12_qt10_cl10.drc",
+            "size": 69,
+            "hdrvdp2": 0.411
+        },
+        {
+            "level": 3,
+            "filename": "Rafa2_drc4/Frame_00001_qp12_qt12_cl10.drc",
+            "size": 76,
+            "hdrvdp2": 0.397
+        }
+    ],
+    "Textures": [
+        {
+            "level": 0,
+            "filename": "Rafa2_jp00/Frame_00001_jp00.jpg",
+            "size": 72,
+            "hdrvdp2": 0
+        },
+        {
+            "level": 1,
+            "filename": "Rafa2_jp10/Frame_00001_jp10.jpg",
+            "size": 94,
+            "hdrvdp2": 0.432
+        },
+        {
+            "level": 2,
+            "filename": "Rafa2_jp30/Frame_00001_jp30.jpg",
+            "size": 147,
+            "hdrvdp2": 0.411
+        },
+        {
+            "level": 3,
+            "filename": "Rafa2_jp55/Frame_00001_jp55.jpg",
+            "size": 205,
+            "hdrvdp2": 0.397
+        }
+    ]
+}
+

@@ -10,9 +10,14 @@ server/nginx/static/media/*
 !server/nginx/static/media/vsenseVVDB2
 server/nginx/static/media/vsenseVVDB2/*
 !server/nginx/static/media/vsenseVVDB2/positions.json
+!server/nginx/static/media/vsenseVVDB2/Matis_obj_Draco-Jpeg
+!server/nginx/static/media/vsenseVVDB2/Rafa2_obj_Draco-Jpeg
 !server/nginx/static/media/vsenseVVDB2_600f
 server/nginx/static/media/vsenseVVDB2_600f/*
 !server/nginx/static/media/vsenseVVDB2_600f/positions.json
+!server/nginx/static/media/vsenseVVDB2_600f/Matis_obj_Draco-Jpeg
+!server/nginx/static/media/vsenseVVDB2_600f/Rafa2_obj_Draco-Jpeg
+
 server/nginx/config/certs/*
 server/nginx/logs/*
 

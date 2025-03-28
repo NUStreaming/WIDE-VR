@@ -9,6 +9,9 @@ Code base for paper (under review): "WIDE-VR: An open-source prototype for web-b
 - Pre-encoded meshes are obtained from V-SENSE Volumetric Video Quality Database #2 (vsenseVVDB2) 
     - Download link: https://v-sense.scss.tcd.ie/research/vsensevvdb2-v-sense-volumetric-video-quality-database-2/
     - Add meshes to folder: `server/nginx/static/media/vsenseVVDB2`
+    - Preview of directory setup:
+    <img src="./docs/media-dir-1.png" width="500">
+    <img src="./docs/media-dir-2.png" width="500">
 
 ### Set up certificate
 

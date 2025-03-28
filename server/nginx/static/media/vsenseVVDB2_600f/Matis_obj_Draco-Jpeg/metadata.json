@@ -1,0 +1,60 @@
+{
+    "name": "Matis_obj_Draco-Jpeg",
+    "nb_levels": 4,
+    "nb_textures": 4,
+    "nb_frames": 600,
+    "area": 10.849,
+    "Levels": [
+        {
+            "level": 0,
+            "filename": "Matis_drc0/Frame_00001_qp08_qt06_cl10.drc",
+            "size": 36,
+            "hdrvdp2": 0.606
+        },
+        {
+            "level": 1,
+            "filename": "Matis_drc1/Frame_00001_qp10_qt10_cl10.drc",
+            "size": 54,
+            "hdrvdp2": 0.432
+        },
+        {
+            "level": 2,
+            "filename": "Matis_drc3/Frame_00001_qp12_qt10_cl10.drc",
+            "size": 71,
+            "hdrvdp2": 0.411
+        },
+        {
+            "level": 3,
+            "filename": "Matis_drc4/Frame_00001_qp12_qt12_cl10.drc",
+            "size": 83,
+            "hdrvdp2": 0.397
+        }
+    ],
+    "Textures": [
+        {
+            "level": 0,
+            "filename": "Matis_jp00/Frame_00001_jp00.jpg",
+            "size": 75,
+            "hdrvdp2": 0.606
+        },
+        {
+            "level": 1,
+            "filename": "Matis_jp10/Frame_00001_jp10.jpg",
+            "size": 103,
+            "hdrvdp2": 0.432
+        },
+        {
+            "level": 2,
+            "filename": "Matis_jp30/Frame_00001_jp30.jpg",
+            "size": 168,
+            "hdrvdp2": 0.411
+        },
+        {
+            "level": 3,
+            "filename": "Matis_jp55/Frame_00001_jp55.jpg",
+            "size": 428,
+            "hdrvdp2": 0.397
+        }
+    ]
+}
+
