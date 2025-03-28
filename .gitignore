@@ -6,6 +6,7 @@ client/Babylon.js/docs
 client/Babylon.js/README_original.md
 
 server/nginx/static/media/*
+!server/nginx/static/media/get_filepath_to_size_mapping.py
 !server/nginx/static/media/vsenseVVDB2
 server/nginx/static/media/vsenseVVDB2/*
 !server/nginx/static/media/vsenseVVDB2/positions.json
